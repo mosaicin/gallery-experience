@@ -136,9 +136,21 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
   let pointerActive = false;
   let lastHud = "";
   let demoTime = 0;
-  const down = (event: KeyboardEvent) => keys.add(event.key.toLowerCase());
+  const down = (event: KeyboardEvent) => {
+    keys.add(event.key.toLowerCase());
+    const digit = Number(event.key);
+    if (Number.isInteger(digit) && digit >= 1 && digit <= 6) world.submitDigit(digit);
+  };
   const up = (event: KeyboardEvent) => keys.delete(event.key.toLowerCase());
   const pointer = () => { pointerActive = true; };
+
+  const glyphColors = [new Color3(1, 0.34, 0.16), new Color3(0.36, 0.88, 1), new Color3(0.72, 0.4, 1), new Color3(1, 0.1, 0.38), new Color3(0.55, 1, 0.22), new Color3(1, 0.8, 0.24)];
+  const facePositions = [new Vector3(-10, 2.3, 10.8), new Vector3(-4, 2.3, 10.8), new Vector3(4, 2.3, 10.8), new Vector3(10, 2.3, 10.8), new Vector3(-10.8, 2.3, -6), new Vector3(10.8, 2.3, -6)];
+  facePositions.forEach((position, index) => {
+    const panel = MeshBuilder.CreateBox(`cube-face-${index}`, { width: 1.35, height: 1.35, depth: 0.18 }, scene);
+    panel.position.copyFrom(position);
+    panel.material = mat(scene, `glyph-face-${index}`, glyphColors[index].scale(0.18), glyphColors[index].scale(0.55));
+  });
   window.addEventListener("keydown", down);
   window.addEventListener("keyup", up);
   canvas.addEventListener("pointerdown", pointer);

@@ -10,6 +10,9 @@ const initialHud: HudSnapshot = {
   state: "explore",
   prompt: "",
   objective: "Найди три осколка памяти.",
+  lockBuffer: "",
+  lockCode: "251463",
+  glyphs: ["Милость", "Вопрос", "Равновесие", "Память", "Забота", "Выбор"],
 };
 
 export default function Home() {
@@ -56,6 +59,7 @@ export default function Home() {
             <div className="objective-kicker"><Compass size={14} /> CURRENT OBJECTIVE</div>
             <h2>{hud.objective}</h2>
             {hud.prompt && <p className="interaction-prompt"><Sparkles size={14} /> {hud.prompt}</p>}
+            {hud.state === "locked" && <div className="digital-lock" aria-label="Цифровой замок"><div className="glyph-list">{hud.glyphs.map((glyph, index) => <span key={glyph}><b>{index + 1}</b>{glyph}</span>)}</div><div className="lock-buffer">{hud.lockBuffer.padEnd(6, "·")}</div><small>Код собирается из символов, не из священного текста.</small></div>}
             {hud.state === "complete" && <p className="completion-copy">Ты прошёл через ночь. Архив сохранён.</p>}
           </section>
           <button className="reset-button" onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "r" }))}><RotateCcw size={14} /> Сбросить маршрут</button>

@@ -26,11 +26,11 @@ A fully original browser game inspired by the high-level premise of a dark amuse
 - **Assets needed:** Procedural cube geometry, generated visual reference/art direction, simple original texture accents, emissive shard materials, original icon-like UI marks.
 - **Camera:** Third-person/over-shoulder orbit camera with drag fallback and keyboard movement.
 - **World:** Small walled night park with a central Archive House, three themed zones, a gate, lamps, benches, and cubic signage.
-- **Interaction:** Walk near a shard and press `E` to collect it. Press `R` to reset.
+- **Interaction:** Walk near a shard and press `E` to collect it. After all three are found, enter the six-digit archive code `251463` with keys `1–6`; press `R` to reset. The six labels are fictional universal principles: Mercy, Inquiry, Balance, Remembrance, Care, and Choice.
 - **Verify:**
   - Movement direction matches input and camera orientation.
   - All collectibles, gate, and landmarks use visible materials with no missing textures.
   - UI remains readable at desktop and mobile widths.
   - Game flow reaches completion without console errors.
   - The `?demo` mode shows a deterministic tour path for screenshot verification.
-  - The game remains original and does not imply endorsement or ownership by the referenced channels.
+  - The game remains original and does not imply endorsement or ownership by the referenced channels.\n  - No sacred quotations or religious figures are used; the lock is a fictional puzzle about universal values.
