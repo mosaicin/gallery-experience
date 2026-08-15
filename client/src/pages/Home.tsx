@@ -18,6 +18,17 @@ const initialHud: HudSnapshot = {
   transitionProgress: 1,
 };
 
+const sendKey = (key: string, type: "keydown" | "keyup" = "keydown") => window.dispatchEvent(new KeyboardEvent(type, { key, bubbles: true }));
+const holdProps = (key: string) => ({ onPointerDown: () => sendKey(key, "keydown"), onPointerUp: () => sendKey(key, "keyup"), onPointerCancel: () => sendKey(key, "keyup"), onPointerLeave: () => sendKey(key, "keyup") });
+
+function MobileControls({ hud, onReset }: { hud: HudSnapshot; onReset: () => void }) {
+  return <div className="mobile-controls" aria-label="Мобильное управление">
+    <div className="mobile-movement"><button {...holdProps("w")} aria-label="Движение вперёд">▲</button><div><button {...holdProps("a")} aria-label="Движение влево">◀</button><button {...holdProps("s")} aria-label="Движение назад">▼</button><button {...holdProps("d")} aria-label="Движение вправо">▶</button></div></div>
+    <div className="mobile-actions"><button onClick={() => sendKey("ArrowUp")} aria-label="Комната вверх">↑</button><button onClick={() => sendKey("ArrowLeft")} aria-label="Комната влево">←</button><button onClick={() => sendKey("ArrowRight")} aria-label="Комната вправо">→</button><button onClick={() => sendKey("ArrowDown")} aria-label="Комната вниз">↓</button><button className="mobile-primary" onPointerDown={() => sendKey("e")} aria-label="Взаимодействовать">E</button><button onClick={onReset} aria-label="Сбросить маршрут">R</button></div>
+    {hud.state === "locked" && <div className="mobile-keypad">{[1, 2, 3, 4, 5, 6].map((digit) => <button key={digit} onClick={() => sendKey(String(digit))}>{digit}</button>)}</div>}
+  </div>;
+}
+
 export default function Home() {
   const [started, setStarted] = useState(() => new URLSearchParams(window.location.search).has("demo"));
   const [hud, setHud] = useState(initialHud);
@@ -29,7 +40,8 @@ export default function Home() {
 
   return (
     <main className={`darkland-app ${started ? "is-live" : "is-threshold"} ${hud.state === "complete" ? "is-complete" : ""}`}>
-      <DarklandGameCanvas demo={demo && started} onHud={setHud} />
+      <DarklandGameCanvas demo={demo} onHud={setHud} />
+      <MobileControls hud={hud} onReset={() => sendKey("r")} />
       <div className="darkland-vignette" aria-hidden="true" />
       {!started && (
         <section className="darkland-threshold" aria-label="Вход в игру">
