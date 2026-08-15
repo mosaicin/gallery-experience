@@ -110,12 +110,29 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
   makePortal("portal-south", new Vector3(0, 0.05, -11.75), new Vector3(1, 0, 0), new Vector3(0, 1, 0));
   makePortal("portal-west", new Vector3(-12.75, 0.05, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0));
   makePortal("portal-east", new Vector3(12.75, 0.05, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0));
-  const floorPortal = MeshBuilder.CreateBox("portal-floor", { width: 3, height: 0.08, depth: 3 }, scene);
-  floorPortal.position = new Vector3(0, 0.04, 0);
-  floorPortal.material = portalGlow;
-  const ceilingPortal = MeshBuilder.CreateBox("portal-ceiling", { width: 3, height: 0.08, depth: 3 }, scene);
-  ceilingPortal.position = new Vector3(0, 7.2, 0);
-  ceilingPortal.material = portalMat;
+  const verticalDoors: Mesh[] = [];
+  const makeHatch = (name: string, y: number, material: StandardMaterial) => {
+    const frameA = MeshBuilder.CreateBox(`${name}-frame-a`, { width: 3.3, height: 0.18, depth: 0.18 }, scene);
+    frameA.position = new Vector3(0, y, -1.58);
+    frameA.material = portalMat;
+    const frameB = MeshBuilder.CreateBox(`${name}-frame-b`, { width: 3.3, height: 0.18, depth: 0.18 }, scene);
+    frameB.position = new Vector3(0, y, 1.58);
+    frameB.material = portalMat;
+    const frameC = MeshBuilder.CreateBox(`${name}-frame-c`, { width: 0.18, height: 0.18, depth: 3.3 }, scene);
+    frameC.position = new Vector3(-1.58, y, 0);
+    frameC.material = portalMat;
+    const frameD = MeshBuilder.CreateBox(`${name}-frame-d`, { width: 0.18, height: 0.18, depth: 3.3 }, scene);
+    frameD.position = new Vector3(1.58, y, 0);
+    frameD.material = portalMat;
+    [-0.72, 0.72].forEach((x, index) => {
+      const leaf = MeshBuilder.CreateBox(`${name}-leaf-${index}`, { width: 1.35, height: 0.12, depth: 2.8 }, scene);
+      leaf.position = new Vector3(x, y + (y > 3 ? -0.08 : 0.08), 0);
+      leaf.material = material;
+      verticalDoors.push(leaf);
+    });
+  };
+  makeHatch("floor-door", 0.12, portalGlow);
+  makeHatch("ceiling-door", 7.08, portalMat);
 
   const pathMat = mat(scene, "path-mat", new Color3(0.09, 0.075, 0.11));
   const path = MeshBuilder.CreateBox("central-path", { width: 4.5, depth: 24, height: 0.06 }, scene);
@@ -261,6 +278,9 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
       module.rotation.y = roomSignature * 0.12 + index * 0.04;
       if (module.material instanceof StandardMaterial) module.material.emissiveColor = glyphColors[(index + Math.abs(roomSignature)) % glyphColors.length].scale(0.18);
     });
+    const [transitionDx, transitionDy, transitionDz] = world.transitionDirectionLabel.split(",").map(Number);
+    const hatchOpening = world.isTransitioning && transitionDy !== 0 ? Math.sin(world.transitionProgress * Math.PI) * 0.9 : 0;
+    verticalDoors.forEach((door, index) => { door.rotation.y = index % 2 === 0 ? hatchOpening : -hatchOpening; });
     if (wasTransitioning && !world.isTransitioning) {
       const [dx, dy, dz] = world.transitionDirectionLabel.split(",").map(Number);
       if (dx > 0) camera.alpha = -Math.PI / 2;
