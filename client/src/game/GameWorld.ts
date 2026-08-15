@@ -44,6 +44,8 @@ export class GameWorld {
   private transitionTo = new Vector3();
   private readonly transitionDuration = 0.42;
   private transitioning = false;
+  private transitionDirection = new Vector3(0, 0, 1);
+  private transitionSerial = 0;
 
   constructor(player: Mesh, shardMeshes: Mesh[], gate: Mesh, houseGlow: Mesh) {
     this.player = player;
@@ -56,6 +58,8 @@ export class GameWorld {
   get isTransitioning() { return this.transitioning; }
   get roomLabel() { return `${this.roomCoord.x},${this.roomCoord.y},${this.roomCoord.z}`; }
   get transitionProgress() { return this.transitioning ? Math.min(this.transitionElapsed / this.transitionDuration, 1) : 1; }
+  get transitionDirectionLabel() { return `${this.transitionDirection.x},${this.transitionDirection.y},${this.transitionDirection.z}`; }
+  get transitionId() { return this.transitionSerial; }
 
   tryPortalTransition() {
     if (this.transitioning) return false;
@@ -70,8 +74,10 @@ export class GameWorld {
     if (Math.abs(next.x) > 1 || Math.abs(next.y) > 1 || Math.abs(next.z) > 1) return false;
     this.transitioning = true;
     this.transitionElapsed = 0;
+    this.transitionDirection.copyFrom(direction);
+    this.transitionSerial += 1;
     this.transitionFrom.copyFrom(this.player.position);
-    this.transitionTo.copyFrom(this.player.position).addInPlace(direction.scale(7.2));
+    this.transitionTo.copyFrom(this.player.position).addInPlace(direction.scale(10.8));
     this.roomCoord.copyFrom(next);
     return true;
   }
@@ -79,6 +85,8 @@ export class GameWorld {
   reset() {
     this.player.position.copyFromFloats(0, 1.05, -8);
     this.roomCoord.copyFromFloats(0, 0, 0);
+    this.transitionDirection.copyFromFloats(0, 0, 1);
+    this.transitionSerial = 0;
     this.transitioning = false;
     this.transitionElapsed = 0;
     this.collected.clear();

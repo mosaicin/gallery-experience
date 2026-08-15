@@ -6,6 +6,7 @@ import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { GameWorld, HudSnapshot, InputState } from "./GameWorld";
@@ -163,9 +164,13 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
   const audio = new AudioManager();
   const keys = new Set<string>();
   let pointerActive = false;
+  let touchId: number | null = null;
+  let touchX = 0;
+  let touchY = 0;
   let lastHud = "";
   let demoTime = 0;
   let previousShards = 0;
+  let wasTransitioning = false;
   let previousState = world.snapshot.state;
   const down = (event: KeyboardEvent) => {
     const key = event.key.toLowerCase();
@@ -191,7 +196,17 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
     if (Number.isInteger(digit) && digit >= 1 && digit <= 6) world.submitDigit(digit);
   };
   const up = (event: KeyboardEvent) => keys.delete(event.key.toLowerCase());
-  const pointer = () => { pointerActive = true; audio.unlock(); };
+  const pointer = (event: PointerEvent) => { pointerActive = true; audio.unlock(); if (event.pointerType === "touch") { touchId = event.pointerId; touchX = event.clientX; touchY = event.clientY; canvas.setPointerCapture(event.pointerId); } };
+  const pointerMove = (event: PointerEvent) => {
+    if (touchId !== event.pointerId) return;
+    const dx = event.clientX - touchX;
+    const dy = event.clientY - touchY;
+    touchX = event.clientX;
+    touchY = event.clientY;
+    camera.alpha -= dx * 0.012;
+    camera.beta = Math.max(Math.PI / 4, Math.min(Math.PI * 3 / 4, camera.beta + dy * 0.009));
+  };
+  const pointerUp = (event: PointerEvent) => { if (touchId === event.pointerId) { touchId = null; canvas.releasePointerCapture(event.pointerId); } };
 
   const glyphColors = [new Color3(1, 0.34, 0.16), new Color3(0.36, 0.88, 1), new Color3(0.72, 0.4, 1), new Color3(1, 0.1, 0.38), new Color3(0.55, 1, 0.22), new Color3(1, 0.8, 0.24)];
   const facePositions = [new Vector3(-10, 2.3, 10.8), new Vector3(-4, 2.3, 10.8), new Vector3(4, 2.3, 10.8), new Vector3(10, 2.3, 10.8), new Vector3(-10.8, 2.3, -6), new Vector3(10.8, 2.3, -6)];
@@ -202,10 +217,13 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
   });
 
   const modulePositions = [-10, -6, -2, 2, 6, 10].flatMap((x) => [new Vector3(x, 4.6, 10.9), new Vector3(x, 4.6, -10.2)]);
+  const roomModules: Mesh[] = [];
+  const roomModuleBases = modulePositions.map((position) => position.clone());
   modulePositions.forEach((position, index) => {
     const module = MeshBuilder.CreateBox(`room-module-${index}`, { width: 2.7, height: 2.7, depth: 0.3 }, scene);
     module.position.copyFrom(position);
     module.material = mat(scene, `room-module-mat-${index}`, new Color3(0.035, 0.05, 0.085), glyphColors[index % glyphColors.length].scale(0.18));
+    roomModules.push(module);
     const seam = MeshBuilder.CreateBox(`room-seam-${index}`, { width: 1.7, height: 0.05, depth: 0.34 }, scene);
     seam.position = position.add(new Vector3(0, -0.8, 0));
     seam.material = mat(scene, `room-seam-mat-${index}`, glyphColors[index % glyphColors.length].scale(0.3), glyphColors[index % glyphColors.length].scale(0.8));
@@ -213,6 +231,9 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
   window.addEventListener("keydown", down);
   window.addEventListener("keyup", up);
   canvas.addEventListener("pointerdown", pointer);
+  canvas.addEventListener("pointermove", pointerMove);
+  canvas.addEventListener("pointerup", pointerUp);
+  canvas.addEventListener("pointercancel", pointerUp);
 
   const beforeRender = scene.onBeforeRenderObservable.add(() => {
     const dt = Math.min(engine.getDeltaTime() / 1000, 0.05);
@@ -231,6 +252,25 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
       input.interact = Math.floor(demoTime) % 3 === 0;
     }
     world.update(dt, input);
+    const roomSignature = world.roomLabel.split(",").map(Number).reduce((sum, value, index) => sum + value * [3, 5, 7][index], 0);
+    roomModules.forEach((module, index) => {
+      const base = roomModuleBases[index];
+      const offset = ((roomSignature + index * 2) % 3) - 1;
+      module.position.x = base.x + offset * 0.45;
+      module.position.y = base.y + (((roomSignature + index) % 2) ? 0.35 : -0.18);
+      module.rotation.y = roomSignature * 0.12 + index * 0.04;
+      if (module.material instanceof StandardMaterial) module.material.emissiveColor = glyphColors[(index + Math.abs(roomSignature)) % glyphColors.length].scale(0.18);
+    });
+    if (wasTransitioning && !world.isTransitioning) {
+      const [dx, dy, dz] = world.transitionDirectionLabel.split(",").map(Number);
+      if (dx > 0) camera.alpha = -Math.PI / 2;
+      if (dx < 0) camera.alpha = Math.PI / 2;
+      if (dz > 0) camera.alpha = Math.PI;
+      if (dz < 0) camera.alpha = 0;
+      if (dy > 0) camera.beta = Math.PI / 3;
+      if (dy < 0) camera.beta = Math.PI * 2 / 3;
+    }
+    wasTransitioning = world.isTransitioning;
     camera.target.copyFrom(player.position);
     const snapshot = world.snapshot;
     if (snapshot.shards > previousShards) audio.collect();
@@ -261,6 +301,9 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
       canvas.removeEventListener("pointerdown", pointer);
+      canvas.removeEventListener("pointermove", pointerMove);
+      canvas.removeEventListener("pointerup", pointerUp);
+      canvas.removeEventListener("pointercancel", pointerUp);
       camera.detachControl();
       scene.dispose();
     },
