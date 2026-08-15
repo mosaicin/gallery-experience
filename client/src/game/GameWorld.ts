@@ -12,6 +12,9 @@ export type HudSnapshot = {
   lockBuffer: string;
   lockCode: string;
   glyphs: string[];
+  room: string;
+  transitioning: boolean;
+  transitionProgress: number;
 };
 
 export type InputState = {
@@ -34,6 +37,12 @@ export class GameWorld {
   private interactLatch = false;
   private resetLatch = false;
   private lockBuffer = "";
+  private roomCoord = new Vector3(0, 0, 0);
+  private transitionElapsed = 0;
+  private transitionFrom = new Vector3();
+  private transitionTo = new Vector3();
+  private readonly transitionDuration = 0.42;
+  private transitioning = false;
 
   constructor(player: Mesh, shardMeshes: Mesh[], gate: Mesh, houseGlow: Mesh) {
     this.player = player;
@@ -43,8 +52,27 @@ export class GameWorld {
     this.shardPositions = shardMeshes.map((mesh) => mesh.position.clone());
   }
 
+  get isTransitioning() { return this.transitioning; }
+  get roomLabel() { return `${this.roomCoord.x},${this.roomCoord.y},${this.roomCoord.z}`; }
+  get transitionProgress() { return this.transitioning ? Math.min(this.transitionElapsed / this.transitionDuration, 1) : 1; }
+
+  requestTransition(direction: Vector3) {
+    if (this.transitioning) return false;
+    const next = this.roomCoord.add(direction);
+    if (Math.abs(next.x) > 1 || Math.abs(next.y) > 1 || Math.abs(next.z) > 1) return false;
+    this.transitioning = true;
+    this.transitionElapsed = 0;
+    this.transitionFrom.copyFrom(this.player.position);
+    this.transitionTo.copyFrom(this.player.position).addInPlace(direction.scale(7.2));
+    this.roomCoord.copyFrom(next);
+    return true;
+  }
+
   reset() {
     this.player.position.copyFromFloats(0, 1.05, -8);
+    this.roomCoord.copyFromFloats(0, 0, 0);
+    this.transitioning = false;
+    this.transitionElapsed = 0;
     this.collected.clear();
     this.state = "explore";
     this.lockBuffer = "";
@@ -57,7 +85,7 @@ export class GameWorld {
   }
 
   submitDigit(digit: number) {
-    if (this.state !== "locked" || digit < 1 || digit > 6) return;
+    if (this.state !== "locked" || this.transitioning || digit < 1 || digit > 6) return;
     this.lockBuffer += String(digit);
     const expected = this.code.slice(0, this.lockBuffer.length).join("");
     if (!expected.startsWith(this.lockBuffer)) {
@@ -74,6 +102,18 @@ export class GameWorld {
   update(dt: number, input: InputState) {
     if (input.reset && !this.resetLatch) this.reset();
     this.resetLatch = input.reset;
+
+    if (this.transitioning) {
+      this.transitionElapsed += dt;
+      const t = Math.min(this.transitionElapsed / this.transitionDuration, 1);
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      this.player.position = Vector3.Lerp(this.transitionFrom, this.transitionTo, eased);
+      if (t >= 1) {
+        this.transitioning = false;
+        this.player.position.copyFrom(this.transitionTo);
+      }
+      return;
+    }
 
     const speed = 4.5;
     const movement = new Vector3(input.strafe, 0, input.forward);
@@ -99,11 +139,11 @@ export class GameWorld {
   get snapshot(): HudSnapshot {
     const nearby = this.shardPositions.some((position, index) => !this.collected.has(index) && Vector3.Distance(this.player.position, position) < 1.5);
     if (this.state === "complete") {
-      return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: "Цифровой выход открыт", objective: "Ночь запомнена. Нажми R, чтобы пройти снова.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs };
+      return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: "Цифровой выход открыт", objective: "Ночь запомнена. Нажми R, чтобы пройти снова.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs, room: this.roomLabel, transitioning: this.transitioning, transitionProgress: this.transitionProgress };
     }
     if (this.state === "locked") {
-      return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: "Введи цифры 1–6 на клавиатуре", objective: "Архивный дом: собери порядок шести универсальных принципов.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs };
+      return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: "Введи цифры 1–6 на клавиатуре", objective: "Архивный дом: собери порядок шести универсальных принципов.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs, room: this.roomLabel, transitioning: this.transitioning, transitionProgress: this.transitionProgress };
     }
-    return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: nearby ? "E — забрать осколок памяти" : "", objective: "Найди три осколка памяти.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs };
+    return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: nearby ? "E — забрать осколок памяти" : "", objective: "Стрелки — перейти в соседнюю комнату. Найди три осколка памяти.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs, room: this.roomLabel, transitioning: this.transitioning, transitionProgress: this.transitionProgress };
   }
 }

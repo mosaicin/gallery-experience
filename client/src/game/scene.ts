@@ -141,7 +141,21 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
   let previousShards = 0;
   let previousState = world.snapshot.state;
   const down = (event: KeyboardEvent) => {
-    keys.add(event.key.toLowerCase());
+    const key = event.key.toLowerCase();
+    const directions: Record<string, Vector3> = {
+      arrowleft: new Vector3(-1, 0, 0),
+      arrowright: new Vector3(1, 0, 0),
+      arrowup: new Vector3(0, 0, 1),
+      arrowdown: new Vector3(0, 0, -1),
+      pageup: new Vector3(0, 1, 0),
+      pagedown: new Vector3(0, -1, 0),
+    };
+    if (directions[key]) {
+      event.preventDefault();
+      if (world.requestTransition(directions[key])) audio.transition();
+      return;
+    }
+    keys.add(key);
     const digit = Number(event.key);
     if (Number.isInteger(digit) && digit >= 1 && digit <= 6) world.submitDigit(digit);
   };
@@ -174,8 +188,8 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
     demoTime += dt;
     const demo = options.demo || keys.has("demo");
     const input: InputState = {
-      forward: (keys.has("w") || keys.has("arrowup") ? 1 : 0) - (keys.has("s") || keys.has("arrowdown") ? 1 : 0),
-      strafe: (keys.has("d") || keys.has("arrowright") ? 1 : 0) - (keys.has("a") || keys.has("arrowleft") ? 1 : 0),
+      forward: (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0),
+      strafe: (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0),
       interact: keys.has("e"),
       reset: keys.has("r"),
     };
@@ -185,13 +199,14 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
       input.interact = Math.floor(demoTime) % 3 === 0;
     }
     world.update(dt, input);
+    camera.target.copyFrom(player.position);
     const snapshot = world.snapshot;
     if (snapshot.shards > previousShards) audio.collect();
     if (snapshot.state === "locked" && previousState !== "locked") audio.transition();
     if (snapshot.state === "complete" && previousState !== "complete") audio.exit();
     previousShards = snapshot.shards;
     previousState = snapshot.state;
-    const hudKey = `${snapshot.shards}-${snapshot.state}-${snapshot.prompt}-${snapshot.objective}`;
+    const hudKey = `${snapshot.shards}-${snapshot.state}-${snapshot.prompt}-${snapshot.objective}-${snapshot.room}-${snapshot.transitioning}-${Math.floor(snapshot.transitionProgress * 10)}`;
     if (hudKey !== lastHud) {
       lastHud = hudKey;
       options.onHud(snapshot);

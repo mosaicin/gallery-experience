@@ -13,6 +13,9 @@ const initialHud: HudSnapshot = {
   lockBuffer: "",
   lockCode: "251463",
   glyphs: ["Милость", "Вопрос", "Равновесие", "Память", "Забота", "Выбор"],
+  room: "0,0,0",
+  transitioning: false,
+  transitionProgress: 1,
 };
 
 export default function Home() {
@@ -53,12 +56,13 @@ export default function Home() {
             <div className="rail-label">MEMORY SHARDS</div>
             <div className="shard-dots">{Array.from({ length: hud.total }).map((_, index) => <span key={index} className={index < hud.shards ? "found" : ""} />)}</div>
             <div className="rail-rule" />
-            <div className="controls"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> MOVE</span><span><kbd>E</kbd> COLLECT</span><span><kbd>R</kbd> RESET</span></div>
+            <div className="controls"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> MOVE</span><span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> ROOM</span><span><kbd>E</kbd> COLLECT</span><span><kbd>R</kbd> RESET</span></div>
           </aside>
           <section className="objective-panel" aria-live="polite">
-            <div className="objective-kicker"><Compass size={14} /> CURRENT OBJECTIVE</div>
+            <div className="objective-kicker"><Compass size={14} /> CURRENT OBJECTIVE <span className="room-coordinate">ROOM {hud.room}</span></div>
             <h2>{hud.objective}</h2>
             {hud.prompt && <p className="interaction-prompt"><Sparkles size={14} /> {hud.prompt}</p>}
+            {hud.transitioning && <div className="transition-bar" aria-label="Переход между комнатами"><span style={{ width: `${hud.transitionProgress * 100}%` }} /></div>}
             {hud.state === "locked" && <div className="digital-lock" aria-label="Цифровой замок"><div className="glyph-list">{hud.glyphs.map((glyph, index) => <span key={glyph}><b>{index + 1}</b>{glyph}</span>)}</div><div className="lock-buffer">{hud.lockBuffer.padEnd(6, "·")}</div><small>Код собирается из символов, не из священного текста.</small></div>}
             {hud.state === "complete" && <p className="completion-copy">Ты прошёл через ночь. Архив сохранён.</p>}
           </section>
