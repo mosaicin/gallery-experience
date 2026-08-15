@@ -49,3 +49,8 @@ Two GitHub Actions workflows now run automatically:
 | `Publish Darkland` | Push to `main` or manual dispatch | Builds the static site, creates the SPA fallback, uploads the Pages artifact, and deploys it through GitHub Pages. |
 
 To operate the project without repeatedly typing in chat, push a change to `main`, then open the **Actions** tab. A green `Verify Darkland` run means the TypeScript and production build checks passed. The `Publish Darkland` run then updates the GitHub Pages deployment. The managed live preview remains available separately while developing.
+
+
+### One-time GitHub Pages setup
+
+The verification workflow is fully automatic and has passed on commit `9aaa04a`. The Pages build artifact is also created automatically, but the repository currently returns `404/403` because GitHub Pages has not been enabled for this repository and the available token cannot change that account setting. To finish the public Pages URL once, open **Settings → Pages → Build and deployment → Source: GitHub Actions**, save, and rerun `Publish Darkland` from the Actions tab. After that, every push to `main` will rebuild and publish the game without further chat commands.
