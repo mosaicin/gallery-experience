@@ -15,6 +15,7 @@ export type HudSnapshot = {
   room: string;
   transitioning: boolean;
   transitionProgress: number;
+  roomStory: string;
 };
 
 export type InputState = {
@@ -46,6 +47,15 @@ export class GameWorld {
   private transitioning = false;
   private transitionDirection = new Vector3(0, 0, 1);
   private transitionSerial = 0;
+  private readonly roomStories: Record<string, string> = {
+    "0,0,0": "Центральный двор: парк собирает три осколка в одну память.",
+    "1,0,0": "Восточная комната: пустые рамки хранят следы тех, кто ушёл дальше.",
+    "-1,0,0": "Западная комната: красный свет отмечает первую развилку маршрута.",
+    "0,1,0": "Верхняя комната: потолок стал полом, и карта перевернулась.",
+    "0,-1,0": "Нижняя комната: звук приходит сверху, но выход ищется внизу.",
+    "0,0,1": "Северная комната: осколок показывает следующий поворот.",
+    "0,0,-1": "Южная комната: тишина проверяет, помнишь ли ты обратную дорогу."
+  };
 
   constructor(player: Mesh, shardMeshes: Mesh[], gate: Mesh, houseGlow: Mesh) {
     this.player = player;
@@ -60,6 +70,7 @@ export class GameWorld {
   get transitionProgress() { return this.transitioning ? Math.min(this.transitionElapsed / this.transitionDuration, 1) : 1; }
   get transitionDirectionLabel() { return `${this.transitionDirection.x},${this.transitionDirection.y},${this.transitionDirection.z}`; }
   get transitionId() { return this.transitionSerial; }
+  get roomStory() { return this.roomStories[this.roomLabel] ?? `Узел ${this.roomLabel}: геометрия комнаты меняется после входа через грань.`; }
 
   tryPortalTransition() {
     if (this.transitioning) return false;
@@ -156,11 +167,11 @@ export class GameWorld {
   get snapshot(): HudSnapshot {
     const nearby = this.shardPositions.some((position, index) => !this.collected.has(index) && Vector3.Distance(this.player.position, position) < 1.5);
     if (this.state === "complete") {
-      return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: "Цифровой выход открыт", objective: "Ночь запомнена. Нажми R, чтобы пройти снова.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs, room: this.roomLabel, transitioning: this.transitioning, transitionProgress: this.transitionProgress };
+      return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: "Цифровой выход открыт", objective: "Ночь запомнена. Нажми R, чтобы пройти снова.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs, room: this.roomLabel, transitioning: this.transitioning, transitionProgress: this.transitionProgress, roomStory: this.roomStory };
     }
     if (this.state === "locked") {
-      return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: "Введи цифры 1–6 на клавиатуре", objective: "Архивный дом: собери порядок шести универсальных принципов.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs, room: this.roomLabel, transitioning: this.transitioning, transitionProgress: this.transitionProgress };
+      return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: "Введи цифры 1–6 на клавиатуре", objective: "Архивный дом: собери порядок шести универсальных принципов.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs, room: this.roomLabel, transitioning: this.transitioning, transitionProgress: this.transitionProgress, roomStory: this.roomStory };
     }
-    return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: nearby ? "E — забрать осколок памяти" : "", objective: "Стрелки — перейти в соседнюю комнату. Найди три осколка памяти.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs, room: this.roomLabel, transitioning: this.transitioning, transitionProgress: this.transitionProgress };
+    return { shards: this.collected.size, total: this.shardMeshes.length, state: this.state, prompt: nearby ? "E — забрать осколок памяти" : "", objective: "Стрелки — перейти в соседнюю комнату. Найди три осколка памяти.", lockBuffer: this.lockBuffer, lockCode: this.code.join(""), glyphs: this.glyphs, room: this.roomLabel, transitioning: this.transitioning, transitionProgress: this.transitionProgress, roomStory: this.roomStory };
   }
 }

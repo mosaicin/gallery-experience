@@ -16,6 +16,7 @@ const initialHud: HudSnapshot = {
   room: "0,0,0",
   transitioning: false,
   transitionProgress: 1,
+  roomStory: "Центральный двор: парк собирает три осколка в одну память.",
 };
 
 const sendKey = (key: string, type: "keydown" | "keyup" = "keydown") => window.dispatchEvent(new KeyboardEvent(type, { key, bubbles: true }));
@@ -73,6 +74,7 @@ export default function Home() {
           <section className="objective-panel" aria-live="polite">
             <div className="objective-kicker"><Compass size={14} /> CURRENT OBJECTIVE <span className="room-coordinate">ROOM {hud.room}</span></div>
             <h2>{hud.objective}</h2>
+            <p className="room-story">{hud.roomStory}</p>
             <div className="movement-legend" aria-label="Схема движения"><span><b>↑</b> СЕВЕР</span><span><b>↓</b> ЮГ</span><span><b>←</b> ЗАПАД</span><span><b>→</b> ВОСТОК</span><span><b>SPACE</b> ВЕРХ</span><span><b>SHIFT</b> НИЗ</span><small>drag по canvas — обзор 360° / 90°</small></div>
             {hud.prompt && <p className="interaction-prompt"><Sparkles size={14} /> {hud.prompt}</p>}
             {hud.transitioning && <div className="transition-bar" aria-label="Переход между комнатами"><span style={{ width: `${hud.transitionProgress * 100}%` }} /></div>}
