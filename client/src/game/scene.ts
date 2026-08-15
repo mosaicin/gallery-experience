@@ -9,6 +9,7 @@ import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { GameWorld, HudSnapshot, InputState } from "./GameWorld";
+import { AudioManager } from "./AudioManager";
 
 export type GameHandle = {
   scene: Scene;
@@ -132,17 +133,20 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
   });
 
   const world = new GameWorld(player, shardMeshes, gate, houseGlow);
+  const audio = new AudioManager();
   const keys = new Set<string>();
   let pointerActive = false;
   let lastHud = "";
   let demoTime = 0;
+  let previousShards = 0;
+  let previousState = world.snapshot.state;
   const down = (event: KeyboardEvent) => {
     keys.add(event.key.toLowerCase());
     const digit = Number(event.key);
     if (Number.isInteger(digit) && digit >= 1 && digit <= 6) world.submitDigit(digit);
   };
   const up = (event: KeyboardEvent) => keys.delete(event.key.toLowerCase());
-  const pointer = () => { pointerActive = true; };
+  const pointer = () => { pointerActive = true; audio.unlock(); };
 
   const glyphColors = [new Color3(1, 0.34, 0.16), new Color3(0.36, 0.88, 1), new Color3(0.72, 0.4, 1), new Color3(1, 0.1, 0.38), new Color3(0.55, 1, 0.22), new Color3(1, 0.8, 0.24)];
   const facePositions = [new Vector3(-10, 2.3, 10.8), new Vector3(-4, 2.3, 10.8), new Vector3(4, 2.3, 10.8), new Vector3(10, 2.3, 10.8), new Vector3(-10.8, 2.3, -6), new Vector3(10.8, 2.3, -6)];
@@ -150,6 +154,16 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
     const panel = MeshBuilder.CreateBox(`cube-face-${index}`, { width: 1.35, height: 1.35, depth: 0.18 }, scene);
     panel.position.copyFrom(position);
     panel.material = mat(scene, `glyph-face-${index}`, glyphColors[index].scale(0.18), glyphColors[index].scale(0.55));
+  });
+
+  const modulePositions = [-10, -6, -2, 2, 6, 10].flatMap((x) => [new Vector3(x, 4.6, 10.9), new Vector3(x, 4.6, -10.2)]);
+  modulePositions.forEach((position, index) => {
+    const module = MeshBuilder.CreateBox(`room-module-${index}`, { width: 2.7, height: 2.7, depth: 0.3 }, scene);
+    module.position.copyFrom(position);
+    module.material = mat(scene, `room-module-mat-${index}`, new Color3(0.035, 0.05, 0.085), glyphColors[index % glyphColors.length].scale(0.18));
+    const seam = MeshBuilder.CreateBox(`room-seam-${index}`, { width: 1.7, height: 0.05, depth: 0.34 }, scene);
+    seam.position = position.add(new Vector3(0, -0.8, 0));
+    seam.material = mat(scene, `room-seam-mat-${index}`, glyphColors[index % glyphColors.length].scale(0.3), glyphColors[index % glyphColors.length].scale(0.8));
   });
   window.addEventListener("keydown", down);
   window.addEventListener("keyup", up);
@@ -172,6 +186,11 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
     }
     world.update(dt, input);
     const snapshot = world.snapshot;
+    if (snapshot.shards > previousShards) audio.collect();
+    if (snapshot.state === "locked" && previousState !== "locked") audio.transition();
+    if (snapshot.state === "complete" && previousState !== "complete") audio.exit();
+    previousShards = snapshot.shards;
+    previousState = snapshot.state;
     const hudKey = `${snapshot.shards}-${snapshot.state}-${snapshot.prompt}-${snapshot.objective}`;
     if (hudKey !== lastHud) {
       lastHud = hudKey;
