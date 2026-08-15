@@ -44,8 +44,8 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
   camera.upperRadiusLimit = 25;
   camera.lowerAlphaLimit = null;
   camera.upperAlphaLimit = null;
-  camera.lowerBetaLimit = Math.PI / 4;
-  camera.upperBetaLimit = Math.PI * 3 / 4;
+  camera.lowerBetaLimit = 0.16;
+  camera.upperBetaLimit = Math.PI - 0.16;
   camera.wheelPrecision = 70;
   camera.attachControl(canvas, true);
   camera.inputs.removeByType("ArcRotateCameraKeyboardMoveInput");
@@ -221,7 +221,7 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
     touchX = event.clientX;
     touchY = event.clientY;
     camera.alpha -= dx * 0.012;
-    camera.beta = Math.max(Math.PI / 4, Math.min(Math.PI * 3 / 4, camera.beta + dy * 0.009));
+    camera.beta = Math.max(0.16, Math.min(Math.PI - 0.16, camera.beta + dy * 0.009));
   };
   const pointerUp = (event: PointerEvent) => { if (touchId === event.pointerId) { touchId = null; canvas.releasePointerCapture(event.pointerId); } };
 
@@ -287,8 +287,8 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
       if (dx < 0) camera.alpha = Math.PI / 2;
       if (dz > 0) camera.alpha = Math.PI;
       if (dz < 0) camera.alpha = 0;
-      if (dy > 0) camera.beta = Math.PI / 3;
-      if (dy < 0) camera.beta = Math.PI * 2 / 3;
+      if (dy > 0) camera.beta = 0.22;
+      if (dy < 0) camera.beta = Math.PI - 0.22;
     }
     wasTransitioning = world.isTransitioning;
     camera.target.copyFrom(player.position);
