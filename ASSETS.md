@@ -1,11 +1,12 @@
-# ASSETS
+# ASSETS — Darkland Night Park Cube
 
-| Asset | Use | URL |
+**Art direction:** original cubic night park; charcoal geometry, amber windows, cyan/magenta/lime memory shards, restrained hard-surface lighting, readable silhouettes, no copied channel branding.
+
+| Asset | Use | Provenance |
 |---|---|---|
-| Gallery art direction | Visual target for the dark exhibition room and palette | `/manus-storage/gallery-art-direction_bd8b582f.png` |
-| Still / Moving | Artwork 01 on the rear wall and mobile selector | `/manus-storage/gallery-painting-one_e021c680.png` |
-| Blue Interval | Artwork 02 on the rear wall and mobile selector | `/manus-storage/gallery-painting-two_b8354476.png` |
-| Afterimage | Artwork 03 on the rear wall and mobile selector | `/manus-storage/gallery-painting-three_6e637198.png` |
-| Gallery mark | Header identity, threshold mark, and favicon | `/manus-storage/gallery-mark_1277cef2.png` |
+| Cubic park geometry | Floor, walls, Archive House, lamps, benches and gate | Procedural Babylon meshes created in code |
+| Memory shards | Three collectible objectives | Procedural emissive Babylon meshes |
+| HUD icons and markers | Quest state and interaction prompts | CSS and procedural UI, no external branding |
+| Visual target | Intended reference for the game | Generation attempted on 2026-08-15 but blocked by the daily image-generation limit; no generated game-specific image is claimed or included |
 
-All artwork was generated for this project with no text or logos. The gallery uses the URLs above directly so the deployed site does not ship large local media files.
+The source links were used only to understand the public high-level premise. The game does not reproduce real people, Telegram logos, channel art, screenshots, posts, or private material.

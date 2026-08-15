@@ -1,7 +1,3 @@
-# STRUCTURE
+# STRUCTURE — Darkland Night Park Cube
 
-`client/src/pages/Home.tsx` owns the threshold state, selected artwork, keyboard shortcuts, night mode, fullscreen action, labels, and responsive control chrome.
-
-`client/src/components/GalleryCanvas.tsx` owns Babylon lifecycle and the spatial exhibition: camera, floor, walls, frames, generated artwork textures, point lights, and keyboard movement. It intentionally exposes only presentation props and does not contain React UI markup beyond the canvas.
-
-`client/src/index.css` is the Nocturne Museum design system: near-black surfaces, ivory Cormorant display type, DM Mono metadata, Manrope support copy, amber beam accents, grain, vignette, and mobile breakpoints.
+The React layer provides the frame and HUD. Babylon.js owns the canvas, camera, meshes, lights and render loop. `client/src/game/GameWorld.ts` owns quest state, collectible positions, player movement and completion logic. `client/src/game/scene.ts` builds the deterministic park and exposes a `GameHandle`. `client/src/components/DarklandGameCanvas.tsx` owns the React/Babylon lifecycle and forwards HUD snapshots to the page. `client/src/pages/Home.tsx` contains the title screen, HUD, instructions and completion panel. `client/src/index.css` contains the dark park visual system.

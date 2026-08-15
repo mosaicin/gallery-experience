@@ -1,6 +1,6 @@
-# Publication checklist
+# User exhibition checklist
 
-- [ ] Check local Git status and configured GitHub identity.
-- [ ] Create a new public GitHub repository for the project.
-- [ ] Commit and push the project source.
-- [ ] Verify the public repository URL and default branch.
+- [x] Inventory and preview all uploaded images.
+- [x] Copy approved exhibition assets into the project using stable paths.
+- [x] Replace current gallery artwork assets and update labels/navigation.
+- [x] Run a production build and publish the revised public site.

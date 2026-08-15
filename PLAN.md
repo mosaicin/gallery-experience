@@ -1,11 +1,36 @@
-# PLAN — The Gallery Experience
+# Game Plan: Darkland — Night Park Cube
 
-The project recreates the provided dark interactive-gallery reference as a polished React + Babylon.js experience.
+## Concept
 
-## Risk slices
+A fully original browser game inspired by the high-level premise of a dark amusement park: the player explores a compact cubic night park, collects three luminous memory shards, activates an original Archive House landmark, and reaches the exit before the park resets. No real people, Telegram branding, logos, channel screenshots, or copied posts are used.
 
-The highest-risk slice is the Babylon-in-React lifecycle: one engine, one scene, resize cleanup, and no duplicate render loops under React StrictMode. The second risk is keeping the threshold screen usable while the canvas is already initializing. The third is responsive input: desktop keyboard/mouse guidance must collapse into touch-friendly artwork navigation on small screens.
+## Risk Tasks
 
-## Verification criteria
+### 1. First-person exploration camera
+- **Why isolated:** Pointer-lock and camera motion can silently fail in embedded browser contexts.
+- **Approach:** Use a visible orbit/drag fallback and keyboard movement. Pointer lock is optional and activated only after a click.
+- **Verify:** WASD movement, mouse drag/orbit, and reset key all respond; the game remains playable without pointer lock.
 
-The threshold must show a centered gallery title, a clear invitation to enter, the generated brand mark, amber progress light, and edge metadata. After entry, the scene must show a dark exhibition room with three distinct artworks, a museum-style label, navigation controls, and a night-mode toggle. TypeScript must pass, generated asset URLs must resolve, and the layout must remain legible at desktop and mobile widths.
+### 2. Procedural cubic park layout
+- **Why isolated:** Repeated boxes can create unclear collision and navigation.
+- **Approach:** Use a fixed deterministic layout with explicit floor, walls, landmarks, shard pedestals, and a goal gate.
+- **Verify:** All three shards are reachable; player cannot leave the park; the goal opens only after collection.
+
+### 3. State-driven quest flow
+- **Why isolated:** Collection, activation, completion, and reset states can desynchronise UI and world objects.
+- **Approach:** Use explicit states: `explore`, `charged`, `complete`. A single GameWorld owns transitions and emits a compact HUD snapshot.
+- **Verify:** Each shard increments the counter once, the Archive House changes state at 3/3, and completion is shown exactly once.
+
+## Main Build
+
+- **Assets needed:** Procedural cube geometry, generated visual reference/art direction, simple original texture accents, emissive shard materials, original icon-like UI marks.
+- **Camera:** Third-person/over-shoulder orbit camera with drag fallback and keyboard movement.
+- **World:** Small walled night park with a central Archive House, three themed zones, a gate, lamps, benches, and cubic signage.
+- **Interaction:** Walk near a shard and press `E` to collect it. Press `R` to reset.
+- **Verify:**
+  - Movement direction matches input and camera orientation.
+  - All collectibles, gate, and landmarks use visible materials with no missing textures.
+  - UI remains readable at desktop and mobile widths.
+  - Game flow reaches completion without console errors.
+  - The `?demo` mode shows a deterministic tour path for screenshot verification.
+  - The game remains original and does not imply endorsement or ownership by the referenced channels.
