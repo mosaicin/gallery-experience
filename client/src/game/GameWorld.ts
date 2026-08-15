@@ -21,6 +21,7 @@ export type InputState = {
   forward: number;
   strafe: number;
   interact: boolean;
+  vertical: number;
   reset: boolean;
 };
 
@@ -55,6 +56,13 @@ export class GameWorld {
   get isTransitioning() { return this.transitioning; }
   get roomLabel() { return `${this.roomCoord.x},${this.roomCoord.y},${this.roomCoord.z}`; }
   get transitionProgress() { return this.transitioning ? Math.min(this.transitionElapsed / this.transitionDuration, 1) : 1; }
+
+  tryPortalTransition() {
+    if (this.transitioning) return false;
+    const p = this.player.position;
+    const direction = p.z > 10.4 ? new Vector3(0, 0, 1) : p.z < -10.4 ? new Vector3(0, 0, -1) : p.x > 11.4 ? new Vector3(1, 0, 0) : p.x < -11.4 ? new Vector3(-1, 0, 0) : p.y > 6.1 ? new Vector3(0, 1, 0) : p.y < 0.55 ? new Vector3(0, -1, 0) : null;
+    return direction ? this.requestTransition(direction) : false;
+  }
 
   requestTransition(direction: Vector3) {
     if (this.transitioning) return false;
@@ -116,13 +124,14 @@ export class GameWorld {
     }
 
     const speed = 4.5;
-    const movement = new Vector3(input.strafe, 0, input.forward);
+    const movement = new Vector3(input.strafe, input.vertical, input.forward);
     if (movement.lengthSquared() > 0) {
       movement.normalize().scaleInPlace(speed * dt);
       this.player.position.addInPlace(movement);
     }
-    this.player.position.x = Math.max(-11.2, Math.min(11.2, this.player.position.x));
-    this.player.position.z = Math.max(-10.5, Math.min(11.2, this.player.position.z));
+    this.player.position.x = Math.max(-11.6, Math.min(11.6, this.player.position.x));
+    this.player.position.y = Math.max(0.35, Math.min(6.3, this.player.position.y));
+    this.player.position.z = Math.max(-10.7, Math.min(11.6, this.player.position.z));
 
     const nearby = this.shardPositions.findIndex((position, index) => !this.collected.has(index) && Vector3.Distance(this.player.position, position) < 1.5);
     if (nearby >= 0 && input.interact && !this.interactLatch) {

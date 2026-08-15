@@ -41,10 +41,13 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
   const camera = new ArcRotateCamera("park-camera", -Math.PI / 2, 1.08, 20, new Vector3(0, 0.8, 0), scene);
   camera.lowerRadiusLimit = 10;
   camera.upperRadiusLimit = 25;
-  camera.lowerBetaLimit = 0.72;
-  camera.upperBetaLimit = 1.32;
+  camera.lowerAlphaLimit = null;
+  camera.upperAlphaLimit = null;
+  camera.lowerBetaLimit = Math.PI / 4;
+  camera.upperBetaLimit = Math.PI * 3 / 4;
   camera.wheelPrecision = 70;
   camera.attachControl(canvas, true);
+  camera.inputs.removeByType("ArcRotateCameraKeyboardMoveInput");
   scene.activeCamera = camera;
 
   const ambient = new HemisphericLight("park-ambient", new Vector3(0, 1, 0), scene);
@@ -82,12 +85,36 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
     { name: "north-wall", position: new Vector3(0, 1.8, 12), scale: new Vector3(26, 3.6, 0.35) },
     { name: "west-wall", position: new Vector3(-13, 1.8, 0), scale: new Vector3(0.35, 3.6, 24) },
     { name: "east-wall", position: new Vector3(13, 1.8, 0), scale: new Vector3(0.35, 3.6, 24) },
+    { name: "south-wall", position: new Vector3(0, 1.8, -12), scale: new Vector3(26, 3.6, 0.35) },
   ];
   walls.forEach(({ name, position, scale }) => {
     const wall = MeshBuilder.CreateBox(name, { width: scale.x, height: scale.y, depth: scale.z }, scene);
     wall.position.copyFrom(position);
     wall.material = wallMat;
   });
+  const portalMat = mat(scene, "portal-frame", new Color3(0.04, 0.08, 0.12), new Color3(0.2, 0.85, 1));
+  const portalGlow = mat(scene, "portal-glow", new Color3(0.12, 0.2, 0.24), new Color3(0.1, 0.95, 1));
+  const makePortal = (name: string, position: Vector3, horizontal: Vector3, vertical: Vector3) => {
+    const left = MeshBuilder.CreateBox(`${name}-left`, { width: 0.18, height: vertical.y || 0.18, depth: 0.18 }, scene);
+    left.position.copyFrom(position.subtract(horizontal.scale(1.25)).add(vertical.scale(0.85)));
+    left.material = portalMat;
+    const right = MeshBuilder.CreateBox(`${name}-right`, { width: 0.18, height: vertical.y || 0.18, depth: 0.18 }, scene);
+    right.position.copyFrom(position.add(horizontal.scale(1.25)).add(vertical.scale(0.85)));
+    right.material = portalMat;
+    const top = MeshBuilder.CreateBox(`${name}-top`, { width: 2.7, height: 0.18, depth: 0.18 }, scene);
+    top.position.copyFrom(position.add(vertical.scale(1.7)));
+    top.material = portalGlow;
+  };
+  makePortal("portal-north", new Vector3(0, 0.05, 11.75), new Vector3(1, 0, 0), new Vector3(0, 1, 0));
+  makePortal("portal-south", new Vector3(0, 0.05, -11.75), new Vector3(1, 0, 0), new Vector3(0, 1, 0));
+  makePortal("portal-west", new Vector3(-12.75, 0.05, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0));
+  makePortal("portal-east", new Vector3(12.75, 0.05, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0));
+  const floorPortal = MeshBuilder.CreateBox("portal-floor", { width: 3, height: 0.08, depth: 3 }, scene);
+  floorPortal.position = new Vector3(0, 0.04, 0);
+  floorPortal.material = portalGlow;
+  const ceilingPortal = MeshBuilder.CreateBox("portal-ceiling", { width: 3, height: 0.08, depth: 3 }, scene);
+  ceilingPortal.position = new Vector3(0, 7.2, 0);
+  ceilingPortal.material = portalMat;
 
   const pathMat = mat(scene, "path-mat", new Color3(0.09, 0.075, 0.11));
   const path = MeshBuilder.CreateBox("central-path", { width: 4.5, depth: 24, height: 0.06 }, scene);
@@ -155,6 +182,10 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
       if (world.requestTransition(directions[key])) audio.transition();
       return;
     }
+    if (key === "e" && world.tryPortalTransition()) {
+      audio.transition();
+      return;
+    }
     keys.add(key);
     const digit = Number(event.key);
     if (Number.isInteger(digit) && digit >= 1 && digit <= 6) world.submitDigit(digit);
@@ -190,6 +221,7 @@ export async function createGameScene(engine: Engine, canvas: HTMLCanvasElement,
     const input: InputState = {
       forward: (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0),
       strafe: (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0),
+      vertical: (keys.has(" ") || keys.has("space") ? 1 : 0) - (keys.has("shift") ? 1 : 0),
       interact: keys.has("e"),
       reset: keys.has("r"),
     };
