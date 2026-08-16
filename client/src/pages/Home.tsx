@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
-import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight, Layers3, Menu, X, ZoomIn } from "lucide-react";
+import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight, Layers3, Menu, Share2, X, ZoomIn } from "lucide-react";
 
 /** Style note: Archive of Surface — bone paper, soot, graphite, oxidized blue, mineral gold, bas-relief edges, and quiet museum motion. */
 
@@ -113,7 +113,16 @@ export default function Home() {
   const [materialType, setMaterialType] = useState<"smalti" | "mixed" | "ceramic">("smalti");
   const [designLevel, setDesignLevel] = useState<"standard" | "detailed">("detailed");
   const [installation, setInstallation] = useState<"included" | "client">("included");
+  const [shareStatus, setShareStatus] = useState("");
   const contactMutation = trpc.contact.submit.useMutation({ onSuccess: () => setContactSent(true) });
+  const shareExhibition = async () => {
+    const shareData = { title: "Archive of Surface", text: "Интернет-экспозиция ручной мозаики и фотодокументации", url: window.location.href };
+    try {
+      if (navigator.share) await navigator.share(shareData);
+      else { await navigator.clipboard.writeText(window.location.href); setShareStatus("ССЫЛКА СКОПИРОВАНА"); }
+    } catch { setShareStatus("СОХРАНИТЕ ССЫЛКУ В БРАУЗЕРЕ"); }
+    window.setTimeout(() => setShareStatus(""), 2400);
+  };
   const active = useMemo(() => works.find((work) => work.id === activeId) ?? works[0], [activeId]);
   const activeIndex = works.findIndex((work) => work.id === active.id);
   const next = works[(activeIndex + 1) % works.length];
@@ -190,7 +199,7 @@ export default function Home() {
           <p className="kicker">01 / ПЕРВЫЙ ЗАЛ</p>
           <h1>Поверхность<br /><em>помнит</em> руку.</h1>
           <p className="hero-lede">Фото. Графит. Свет. Пять фрагментов стены.</p>
-          <a className="scroll-cue" href="#works"><span>Смотреть архив</span><ArrowDown size={14} /></a>
+          <div className="hero-actions"><a className="scroll-cue" href="#works"><span>Смотреть архив</span><ArrowDown size={14} /></a><button className="share-cue" type="button" onClick={shareExhibition}><span>{shareStatus || "Поделиться выставкой"}</span><Share2 size={14} /></button></div>
         </div>
         <div className="hero-plate" aria-hidden="true"><span className="plate-shadow" /><span className="plate-line plate-line-one" /><span className="plate-line plate-line-two" /><span className="plate-line plate-line-red" /><span className="plate-caption">MATERIAL / MEMORY / HAND</span></div>
         <div className="hero-coordinates">55°45′ N<br />37°37′ E</div>
