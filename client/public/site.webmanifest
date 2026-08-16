@@ -1,0 +1,10 @@
+{
+  "name": "Archive of Surface",
+  "short_name": "Archive of Surface",
+  "description": "Минималистичная онлайн-выставка мозаики, фотодокументации и карандашных этюдов.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "lang": "ru"
+}

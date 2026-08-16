@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://galleryexp-dstrjv7l.manus.space/sitemap.xml
