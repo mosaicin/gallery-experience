@@ -99,10 +99,28 @@ export default function Home() {
   const [indexOpen, setIndexOpen] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [catalogImage, setCatalogImage] = useState<string | null>(null);
+  const [catalogIndex, setCatalogIndex] = useState<number | null>(null);
+  const [contactSent, setContactSent] = useState(false);
+  const [quoteArea, setQuoteArea] = useState(4);
+  const [quoteType, setQuoteType] = useState<"panel" | "wall">("panel");
   const active = useMemo(() => works.find((work) => work.id === activeId) ?? works[0], [activeId]);
   const activeIndex = works.findIndex((work) => work.id === active.id);
   const next = works[(activeIndex + 1) % works.length];
   const previous = works[(activeIndex - 1 + works.length) % works.length];
+
+  const quoteBand = quoteType === "panel" ? { low: 180000, high: 420000, label: "панно / умеренная сложность" } : { low: 350000, high: 900000, label: "монументальная стена / высокая сложность" };
+  const quoteLow = quoteArea * quoteBand.low;
+  const quoteHigh = quoteArea * quoteBand.high;
+  const closeZoom = () => { setZoomOpen(false); setCatalogImage(null); setCatalogIndex(null); };
+  const moveZoom = (direction: 1 | -1) => {
+    if (catalogIndex !== null) {
+      const nextIndex = (catalogIndex + direction + photoCatalog.length) % photoCatalog.length;
+      setCatalogIndex(nextIndex);
+      setCatalogImage(`/photo-catalog/${photoCatalog[nextIndex][0]}.webp`);
+      return;
+    }
+    setActiveId(direction === 1 ? next.id : previous.id);
+  };
 
   useEffect(() => {
     const items = Array.from(document.querySelectorAll<HTMLElement>(".reveal-on-scroll"));
@@ -121,6 +139,17 @@ export default function Home() {
     items.forEach((item) => observer.observe(item));
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!zoomOpen && catalogIndex === null) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeZoom();
+      if (event.key === "ArrowLeft") moveZoom(-1);
+      if (event.key === "ArrowRight") moveZoom(1);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [zoomOpen, catalogIndex, active.id, next.id, previous.id]);
 
   return (
     <main className="archive-site">
@@ -186,11 +215,15 @@ export default function Home() {
 
       <section className="relief-section"><div className="relief-copy"><p className="kicker">ПОСЛЕДНИЙ ЗАЛ</p><h2>Вода<br />помнит<br /><em>ветер.</em></h2></div><div className="mill-scene reveal-on-scroll" aria-label="Сказочная водяная мельница"><div className="mill-horizon" /><div className="mill-hill" /><div className="mill-house"><span className="mill-roof" /><span className="mill-door" /><span className="mill-window" /></div><div className="mill-wheel"><span /><span /><span /><span /><span /><span /></div><div className="mill-water"><i /><i /><i /><i /></div><div className="mill-wind"><i /><i /><i /></div><span className="mill-caption">ВОДЯНАЯ МЕЛЬНИЦА / СКАЗКА</span></div></section>
 
-      <section className="photo-catalog" id="catalog"><div className="catalog-heading"><p className="kicker">ПОЛНЫЙ ФОТОКАТАЛОГ</p><span>11 / 11</span></div><div className="catalog-grid">{photoCatalog.map(([id, label], index) => <button className="catalog-item reveal-on-scroll" key={id} onClick={() => setCatalogImage(`/photo-catalog/${id}.webp`)} aria-label={`Увеличить ${label}`}><img src={`/photo-catalog/${id}.webp`} alt={label} loading={index > 3 ? "lazy" : "eager"} /><span>{String(index + 1).padStart(2, "0")} — {label}</span></button>)}</div></section>
+      <section className="photo-catalog" id="catalog"><div className="catalog-heading"><p className="kicker">ПОЛНЫЙ ФОТОКАТАЛОГ</p><span>11 / 11</span></div><div className="catalog-grid">{photoCatalog.map(([id, label], index) => <button className="catalog-item reveal-on-scroll" key={id} onClick={() => { setCatalogIndex(index); setCatalogImage(`/photo-catalog/${id}.webp`); }} aria-label={`Увеличить ${label}`}><img src={`/photo-catalog/${id}.webp`} alt={label} loading={index > 3 ? "lazy" : "eager"} /><span>{String(index + 1).padStart(2, "0")} — {label}</span></button>)}</div></section>
+
+      <section className="commission-section" id="commission"><div className="commission-copy"><p className="kicker">МАСТЕРСКАЯ / ЗАПРОС</p><h2>Обсудить<br /><em>панно.</em></h2><p>Локальный черновик заявки без публикации телефона. Укажите только то, что готовы передать.</p></div><form className="contact-form" onSubmit={(event) => { event.preventDefault(); setContactSent(true); }}><label>Имя <input name="name" autoComplete="name" placeholder="необязательно" /></label><label>Почта для ответа <input name="email" type="email" autoComplete="email" placeholder="необязательно" /></label><label>Кратко о проекте <textarea name="brief" rows={4} placeholder="площадь, место, срок, характер изображения" /></label><button type="submit">{contactSent ? "ЧЕРНОВИК СОХРАНЁН" : "СОЗДАТЬ ЧЕРНОВИК"} <ArrowUpRight size={14} /></button><small>Форма не отправляет данные на сервер и не заменяет договор или смету.</small></form></section>
+
+      <section className="estimate-section" id="estimate"><div><p className="kicker">ПОРТФОЛИО / ОЦЕНКА</p><h2>Сколько<br /><em>поверхности?</em></h2><p className="estimate-disclaimer">Ориентир для обсуждения, не является офертой. Итог зависит от эскиза, основания, материалов, доступа и монтажа.</p></div><div className="estimate-panel"><label>Площадь, м² <input type="number" min="1" max="500" step="0.5" value={quoteArea} onChange={(event) => setQuoteArea(Number(event.target.value) || 1)} /></label><div className="estimate-switch"><button className={quoteType === "panel" ? "is-active" : ""} onClick={() => setQuoteType("panel")} type="button">ПАННО</button><button className={quoteType === "wall" ? "is-active" : ""} onClick={() => setQuoteType("wall")} type="button">СТЕНА</button></div><p className="estimate-band">{quoteBand.label}</p><strong>{quoteLow.toLocaleString("ru-RU")} — {quoteHigh.toLocaleString("ru-RU")} ₽</strong><small>без окончательной сметы, выезда и согласования материалов</small></div></section>
 
       <footer className="archive-footer"><span>ARCHIVE OF SURFACE / 2026</span><span>BASED ON UPLOADED PHOTO DOCUMENTATION</span><span><a href="#top">UP</a> <ArrowUpRight size={13} /></span></footer>
 
-      {(zoomOpen || catalogImage) && <div className="zoom-overlay" role="dialog" aria-modal="true" aria-label="Увеличенное изображение" onClick={() => { setZoomOpen(false); setCatalogImage(null); }}><button className="zoom-close" onClick={() => { setZoomOpen(false); setCatalogImage(null); }} aria-label="Закрыть"><X size={18} /></button><img src={catalogImage ?? (showSketch ? active.sketch : active.photo)} alt={catalogImage ? "Увеличенная фотография из каталога" : `${active.title} — увеличенный вид`} onClick={(event) => event.stopPropagation()} /><span>{catalogImage ? "ФОТОКАТАЛОГ" : `${active.index} / ${showSketch ? "ЭТЮД" : "ФОТО"}`}</span></div>}
+      {(zoomOpen || catalogImage) && <div className="zoom-overlay" role="dialog" aria-modal="true" aria-label="Увеличенное изображение" onClick={closeZoom}><button className="zoom-close" onClick={closeZoom} aria-label="Закрыть"><X size={18} /></button><button className="zoom-nav zoom-nav-left" onClick={(event) => { event.stopPropagation(); moveZoom(-1); }} aria-label="Предыдущее изображение"><ChevronLeft size={26} /></button><img src={catalogImage ?? (showSketch ? active.sketch : active.photo)} alt={catalogImage ? "Увеличенная фотография из каталога" : `${active.title} — увеличенный вид`} onClick={(event) => event.stopPropagation()} /><button className="zoom-nav zoom-nav-right" onClick={(event) => { event.stopPropagation(); moveZoom(1); }} aria-label="Следующее изображение"><ChevronRight size={26} /></button><span>{catalogImage ? `${String((catalogIndex ?? 0) + 1).padStart(2, "0")} / ФОТОКАТАЛОГ` : `${active.index} / ${showSketch ? "ЭТЮД" : "ФОТО"}`}</span></div>}
 
       {indexOpen && <aside className="index-drawer" aria-label="Каталог выставки"><div className="drawer-head"><span>INDEX / WORKS</span><button onClick={() => setIndexOpen(false)} aria-label="Закрыть каталог"><X size={17} /></button></div><p className="drawer-note">Выборка из 38-страничного PDF-архива. Названия залов являются кураторскими, если иное не указано в источнике.</p>{works.map((work) => <button key={work.id} className={work.id === active.id ? "drawer-item is-active" : "drawer-item"} onClick={() => { setActiveId(work.id); setIndexOpen(false); }}><span>{work.index}</span><div><b>{work.title}</b><small>{work.material}</small></div></button>)}</aside>}
     </main>
