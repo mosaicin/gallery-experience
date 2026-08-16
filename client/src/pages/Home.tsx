@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { trpc } from "@/lib/trpc";
 import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight, Layers3, Menu, X, ZoomIn } from "lucide-react";
 
 /** Style note: Archive of Surface — bone paper, soot, graphite, oxidized blue, mineral gold, bas-relief edges, and quiet museum motion. */
@@ -94,6 +95,12 @@ function ReliefFrame({ children, className = "" }: { children: React.ReactNode; 
 }
 
 export default function Home() {
+  // The useAuth hook provides authentication state.
+  // To implement login/logout, call logout(), or start login from an event
+  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
+  // startLogin() during render (no href={startLogin()}) — it mints a one-time
+  // nonce cookie and must run only at the moment of navigation.
+
   const [activeId, setActiveId] = useState("threshold");
   const [showSketch, setShowSketch] = useState(true);
   const [indexOpen, setIndexOpen] = useState(false);
@@ -103,14 +110,29 @@ export default function Home() {
   const [contactSent, setContactSent] = useState(false);
   const [quoteArea, setQuoteArea] = useState(4);
   const [quoteType, setQuoteType] = useState<"panel" | "wall">("panel");
+  const [materialType, setMaterialType] = useState<"smalti" | "mixed" | "ceramic">("smalti");
+  const [designLevel, setDesignLevel] = useState<"standard" | "detailed">("detailed");
+  const [installation, setInstallation] = useState<"included" | "client">("included");
+  const contactMutation = trpc.contact.submit.useMutation({ onSuccess: () => setContactSent(true) });
   const active = useMemo(() => works.find((work) => work.id === activeId) ?? works[0], [activeId]);
   const activeIndex = works.findIndex((work) => work.id === active.id);
   const next = works[(activeIndex + 1) % works.length];
   const previous = works[(activeIndex - 1 + works.length) % works.length];
 
   const quoteBand = quoteType === "panel" ? { low: 180000, high: 420000, label: "панно / умеренная сложность" } : { low: 350000, high: 900000, label: "монументальная стена / высокая сложность" };
-  const quoteLow = quoteArea * quoteBand.low;
-  const quoteHigh = quoteArea * quoteBand.high;
+  const materialFactor = materialType === "smalti" ? 1 : materialType === "mixed" ? 0.88 : 0.68;
+  const designAddon = designLevel === "detailed" ? quoteArea * 60000 : quoteArea * 25000;
+  const preparation = quoteArea * (quoteType === "wall" ? 45000 : 25000);
+  const installationCost = installation === "included" ? quoteArea * (quoteType === "wall" ? 120000 : 70000) : 0;
+  const logistics = 35000;
+  const quoteLow = Math.round((quoteArea * quoteBand.low * materialFactor + designAddon + preparation + installationCost + logistics) * 0.9);
+  const quoteHigh = Math.round((quoteArea * quoteBand.high * materialFactor + designAddon + preparation + installationCost + logistics) * 1.1);
+  const exportQuote = () => {
+    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!printWindow) return;
+    printWindow.document.write(`<html lang="ru"><head><title>Ориентировочная смета — Archive of Surface</title><style>body{font-family:Georgia,serif;padding:48px;color:#151a21}h1{font-size:32px;font-weight:400}p{line-height:1.6}table{border-collapse:collapse;width:100%;max-width:680px}td{border-bottom:1px solid #ccc;padding:12px 0}td:last-child{text-align:right}small{color:#666}</style></head><body><h1>Archive of Surface</h1><p>Ориентировочная смета ручной мозаики</p><table><tr><td>Площадь</td><td>${quoteArea} м²</td></tr><tr><td>Формат</td><td>${quoteType === "panel" ? "панно" : "монументальная стена"}</td></tr><tr><td>Материал</td><td>${materialType === "smalti" ? "ручная смальта" : materialType === "mixed" ? "смальта + камень/керамика" : "керамическая мозаика"}</td></tr><tr><td>Проектирование</td><td>${designLevel === "detailed" ? "детальная композиция" : "стандартная композиция"}</td></tr><tr><td>Подготовка основания</td><td>включена</td></tr><tr><td>Монтаж</td><td>${installation === "included" ? "включён ориентировочно" : "выполняется заказчиком"}</td></tr><tr><td><strong>Ориентир</strong></td><td><strong>${quoteLow.toLocaleString("ru-RU")} — ${quoteHigh.toLocaleString("ru-RU")} ₽</strong></td></tr></table><p><small>Не является офертой. Итог зависит от эскиза, основания, материалов, доступа, логистики и письменного технического задания.</small></p><script>window.onload=()=>window.print()</script></body></html>`);
+    printWindow.document.close();
+  };
   const closeZoom = () => { setZoomOpen(false); setCatalogImage(null); setCatalogIndex(null); };
   const moveZoom = (direction: 1 | -1) => {
     if (catalogIndex !== null) {
@@ -217,9 +239,9 @@ export default function Home() {
 
       <section className="photo-catalog" id="catalog"><div className="catalog-heading"><p className="kicker">ПОЛНЫЙ ФОТОКАТАЛОГ</p><span>11 / 11</span></div><div className="catalog-grid">{photoCatalog.map(([id, label], index) => <button className="catalog-item reveal-on-scroll" key={id} onClick={() => { setCatalogIndex(index); setCatalogImage(`/photo-catalog/${id}.webp`); }} aria-label={`Увеличить ${label}`}><img src={`/photo-catalog/${id}.webp`} alt={label} loading={index > 3 ? "lazy" : "eager"} /><span>{String(index + 1).padStart(2, "0")} — {label}</span></button>)}</div></section>
 
-      <section className="commission-section" id="commission"><div className="commission-copy"><p className="kicker">МАСТЕРСКАЯ / ЗАПРОС</p><h2>Обсудить<br /><em>панно.</em></h2><p>Локальный черновик заявки без публикации телефона. Укажите только то, что готовы передать.</p></div><form className="contact-form" onSubmit={(event) => { event.preventDefault(); setContactSent(true); }}><label>Имя <input name="name" autoComplete="name" placeholder="необязательно" /></label><label>Почта для ответа <input name="email" type="email" autoComplete="email" placeholder="необязательно" /></label><label>Кратко о проекте <textarea name="brief" rows={4} placeholder="площадь, место, срок, характер изображения" /></label><button type="submit">{contactSent ? "ЧЕРНОВИК СОХРАНЁН" : "СОЗДАТЬ ЧЕРНОВИК"} <ArrowUpRight size={14} /></button><small>Форма не отправляет данные на сервер и не заменяет договор или смету.</small></form></section>
+      <section className="commission-section" id="commission"><div className="commission-copy"><p className="kicker">МАСТЕРСКАЯ / ЗАПРОС</p><h2>Обсудить<br /><em>панно.</em></h2><p>Локальный черновик заявки без публикации телефона. Укажите только то, что готовы передать.</p></div><form className="contact-form" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); contactMutation.mutate({ name: String(form.get("name") ?? ""), email: String(form.get("email") ?? ""), brief: String(form.get("brief") ?? ""), website: String(form.get("website") ?? "") }); }}><label>Имя <input name="name" autoComplete="name" placeholder="необязательно" /></label><label>Почта для ответа <input name="email" type="email" autoComplete="email" placeholder="необязательно" /></label><label>Кратко о проекте <textarea name="brief" rows={4} required minLength={10} placeholder="площадь, место, срок, характер изображения" /></label><input className="contact-honeypot" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" /><button type="submit" disabled={contactMutation.isPending}>{contactMutation.isPending ? "ОТПРАВКА…" : contactSent ? "ЗАЯВКА ОТПРАВЛЕНА" : "ОТПРАВИТЬ ЗАЯВКУ"} <ArrowUpRight size={14} /></button>{contactMutation.isError && <small className="form-error">Не удалось отправить заявку. Попробуйте позже.</small>}<small>Заявка передаётся владельцу через защищённый серверный канал. Телефон в форму не включён.</small></form></section>
 
-      <section className="estimate-section" id="estimate"><div><p className="kicker">ПОРТФОЛИО / ОЦЕНКА</p><h2>Сколько<br /><em>поверхности?</em></h2><p className="estimate-disclaimer">Ориентир для обсуждения, не является офертой. Итог зависит от эскиза, основания, материалов, доступа и монтажа.</p></div><div className="estimate-panel"><label>Площадь, м² <input type="number" min="1" max="500" step="0.5" value={quoteArea} onChange={(event) => setQuoteArea(Number(event.target.value) || 1)} /></label><div className="estimate-switch"><button className={quoteType === "panel" ? "is-active" : ""} onClick={() => setQuoteType("panel")} type="button">ПАННО</button><button className={quoteType === "wall" ? "is-active" : ""} onClick={() => setQuoteType("wall")} type="button">СТЕНА</button></div><p className="estimate-band">{quoteBand.label}</p><strong>{quoteLow.toLocaleString("ru-RU")} — {quoteHigh.toLocaleString("ru-RU")} ₽</strong><small>без окончательной сметы, выезда и согласования материалов</small></div></section>
+      <section className="estimate-section" id="estimate"><div><p className="kicker">ПОРТФОЛИО / ОЦЕНКА</p><h2>Сколько<br /><em>поверхности?</em></h2><p className="estimate-disclaimer">Ориентир для обсуждения, не является офертой. Итог зависит от эскиза, основания, материалов, доступа и монтажа.</p></div><div className="estimate-panel"><label>Площадь, м² <input type="number" min="1" max="500" step="0.5" value={quoteArea} onChange={(event) => setQuoteArea(Number(event.target.value) || 1)} /></label><div className="estimate-switch"><button className={quoteType === "panel" ? "is-active" : ""} onClick={() => setQuoteType("panel")} type="button">ПАННО</button><button className={quoteType === "wall" ? "is-active" : ""} onClick={() => setQuoteType("wall")} type="button">СТЕНА</button></div><label>Материал <select value={materialType} onChange={(event) => setMaterialType(event.target.value as typeof materialType)}><option value="smalti">ручная смальта</option><option value="mixed">смальта + камень</option><option value="ceramic">керамическая мозаика</option></select></label><label>Композиция <select value={designLevel} onChange={(event) => setDesignLevel(event.target.value as typeof designLevel)}><option value="standard">стандартная</option><option value="detailed">детальная</option></select></label><label>Монтаж <select value={installation} onChange={(event) => setInstallation(event.target.value as typeof installation)}><option value="included">включить</option><option value="client">заказчик</option></select></label><p className="estimate-band">{quoteBand.label} / материал + проектирование + основание + логистика</p><strong>{quoteLow.toLocaleString("ru-RU")} — {quoteHigh.toLocaleString("ru-RU")} ₽</strong><small>ориентировочно: подготовка, логистика и выбранный монтаж учтены; не является офертой</small><button className="estimate-export" type="button" onClick={exportQuote}>ПЕЧАТЬ / СОХРАНИТЬ PDF <ArrowUpRight size={14} /></button></div></section>
 
       <footer className="archive-footer"><span>ARCHIVE OF SURFACE / 2026</span><span>BASED ON UPLOADED PHOTO DOCUMENTATION</span><span><a href="#top">UP</a> <ArrowUpRight size={13} /></span></footer>
 
