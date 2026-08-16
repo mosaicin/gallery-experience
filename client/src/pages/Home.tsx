@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight, Layers3, Menu, X, ZoomIn } from "lucide-react";
 
 /** Style note: Archive of Surface — bone paper, soot, graphite, oxidized blue, mineral gold, bas-relief edges, and quiet museum motion. */
@@ -104,6 +104,24 @@ export default function Home() {
   const next = works[(activeIndex + 1) % works.length];
   const previous = works[(activeIndex - 1 + works.length) % works.length];
 
+  useEffect(() => {
+    const items = Array.from(document.querySelectorAll<HTMLElement>(".reveal-on-scroll"));
+    if (typeof IntersectionObserver === "undefined") {
+      items.forEach((item) => item.classList.add("is-visible"));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    items.forEach((item) => observer.observe(item));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <main className="archive-site">
       <div className="paper-noise" aria-hidden="true" />
@@ -139,7 +157,7 @@ export default function Home() {
           {works.map((work) => <button key={work.id} className={work.id === active.id ? "is-active" : ""} onClick={() => setActiveId(work.id)}><span>{work.index}</span><b>{work.room}</b></button>)}
         </div>
 
-        <article className="work-room" aria-labelledby={`title-${active.id}`}>
+        <article className="work-room reveal-on-scroll" aria-labelledby={`title-${active.id}`}>
           <div className="room-topline"><span>{active.sourceLabel}</span><span>ROOM {active.index} / {active.room.toUpperCase()}</span></div>
           <div className="work-grid">
             <div className="work-image-column">
@@ -166,9 +184,9 @@ export default function Home() {
         </article>
       </section>
 
-      <section className="relief-section"><div className="relief-copy"><p className="kicker">ПОСЛЕДНИЙ ЗАЛ</p><h2>Вода<br />помнит<br /><em>ветер.</em></h2></div><div className="mill-scene" aria-label="Сказочная водяная мельница"><div className="mill-horizon" /><div className="mill-hill" /><div className="mill-house"><span className="mill-roof" /><span className="mill-door" /><span className="mill-window" /></div><div className="mill-wheel"><span /><span /><span /><span /><span /><span /></div><div className="mill-water"><i /><i /><i /><i /></div><div className="mill-wind"><i /><i /><i /></div><span className="mill-caption">ВОДЯНАЯ МЕЛЬНИЦА / СКАЗКА</span></div></section>
+      <section className="relief-section"><div className="relief-copy"><p className="kicker">ПОСЛЕДНИЙ ЗАЛ</p><h2>Вода<br />помнит<br /><em>ветер.</em></h2></div><div className="mill-scene reveal-on-scroll" aria-label="Сказочная водяная мельница"><div className="mill-horizon" /><div className="mill-hill" /><div className="mill-house"><span className="mill-roof" /><span className="mill-door" /><span className="mill-window" /></div><div className="mill-wheel"><span /><span /><span /><span /><span /><span /></div><div className="mill-water"><i /><i /><i /><i /></div><div className="mill-wind"><i /><i /><i /></div><span className="mill-caption">ВОДЯНАЯ МЕЛЬНИЦА / СКАЗКА</span></div></section>
 
-      <section className="photo-catalog" id="catalog"><div className="catalog-heading"><p className="kicker">ПОЛНЫЙ ФОТОКАТАЛОГ</p><span>11 / 11</span></div><div className="catalog-grid">{photoCatalog.map(([id, label], index) => <button className="catalog-item" key={id} onClick={() => setCatalogImage(`/photo-catalog/${id}.webp`)} aria-label={`Увеличить ${label}`}><img src={`/photo-catalog/${id}.webp`} alt={label} loading={index > 3 ? "lazy" : "eager"} /><span>{String(index + 1).padStart(2, "0")} — {label}</span></button>)}</div></section>
+      <section className="photo-catalog" id="catalog"><div className="catalog-heading"><p className="kicker">ПОЛНЫЙ ФОТОКАТАЛОГ</p><span>11 / 11</span></div><div className="catalog-grid">{photoCatalog.map(([id, label], index) => <button className="catalog-item reveal-on-scroll" key={id} onClick={() => setCatalogImage(`/photo-catalog/${id}.webp`)} aria-label={`Увеличить ${label}`}><img src={`/photo-catalog/${id}.webp`} alt={label} loading={index > 3 ? "lazy" : "eager"} /><span>{String(index + 1).padStart(2, "0")} — {label}</span></button>)}</div></section>
 
       <footer className="archive-footer"><span>ARCHIVE OF SURFACE / 2026</span><span>BASED ON UPLOADED PHOTO DOCUMENTATION</span><span><a href="#top">UP</a> <ArrowUpRight size={13} /></span></footer>
 
