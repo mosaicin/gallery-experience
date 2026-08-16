@@ -70,3 +70,18 @@ The mark is an ivory interlocking brush-stroke symbol with a small square apertu
 - The threshold CTA is now “Step past the threshold” to make the first action feel like entering a room.
 - The generated interlocking mark appears above the title and is reused as the favicon and header identity.
 - The amber progress line now connects to a subtle local spotlight and mark glow, reinforcing light as navigation.
+
+
+# Current exhibition override — Archive of Surface
+
+The uploaded PDF is now the ground-truth reference for this exhibition route. The visual direction shifts from the earlier nocturnal interactive gallery toward a restrained museum archive built from bone paper, soot, graphite, oxidized blue, and a single mineral-gold trace.
+
+The page should read as a linear gallery promenade with an asymmetric index rail. Each selected source photograph receives a paired graphite study, a bas-relief frame, and a clearly marked curatorial spatial prehistory. The source image remains documentary; the graphite study is an interpretive reconstruction and must never be presented as an original historical drawing.
+
+Use brutalist editorialism and material phenomenology as the design movement. Avoid rounded card grids, saturated gradients, decorative neon, and invented factual attributions. Depth comes from paper grain, relief edges, offset shadows, quiet labels, and alternating image/text bays. Interaction should feel like opening a conservation drawer: restrained 180–260ms reveals, no continuous motion, and full reduced-motion support.
+
+Signature copy: “The surface remembers the hand.” and “A room is reconstructed from fragments, not declared as fact.”
+
+Brand mark for this route: two offset rectangles, one bone and one graphite, suggesting a tessera lifted from a wall and placed on a sheet.
+
+Signature color for this route: oxidized blue `#567A7A`, used only for active wayfinding and architectural memory.
