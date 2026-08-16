@@ -4,6 +4,13 @@
 
 The visual language is intentionally sparse: bone paper, soot, graphite, mineral gold, oxidized-blue wayfinding, bas-relief frames, and directional shadows. Each room includes a short spatial prehistory. These texts are marked as curatorial interpretation and do not assert unverified titles, dates, authorship, or locations.
 
+## Published links
+
+- **Website on Manus:** https://galleryexp-dstrjv7l.manus.space
+- **Open GitHub repository:** https://github.com/mosaicin/gallery-experience
+
+The website is the current public exhibition. The repository contains the source code, optimized catalogue images, and build instructions.
+
 ## Public scope
 
 This public repository contains the web interface and the exhibition assets used by the deployed page. It does **not** contain the uploaded PDF, private personal archives, Mail.ru credentials, media archives, or private legal notes. The source images are referenced through project storage paths rather than committed as local bulk files.
