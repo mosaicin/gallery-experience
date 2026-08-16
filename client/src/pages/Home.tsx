@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight, Grid3X3, Layers3, Menu, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight, Layers3, Menu, X, ZoomIn } from "lucide-react";
 
 /** Style note: Archive of Surface — bone paper, soot, graphite, oxidized blue, mineral gold, bas-relief edges, and quiet museum motion. */
 
@@ -93,6 +93,7 @@ export default function Home() {
   const [activeId, setActiveId] = useState("threshold");
   const [showSketch, setShowSketch] = useState(true);
   const [indexOpen, setIndexOpen] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
   const active = useMemo(() => works.find((work) => work.id === activeId) ?? works[0], [activeId]);
   const activeIndex = works.findIndex((work) => work.id === active.id);
   const next = works[(activeIndex + 1) % works.length];
@@ -114,10 +115,10 @@ export default function Home() {
         <div className="hero-copy">
           <p className="kicker">01 / ПЕРВЫЙ ЗАЛ</p>
           <h1>Поверхность<br /><em>помнит</em> руку.</h1>
-          <p className="hero-lede">Выставочное пространство по материалам фотодокументации. Здесь мозаика рассматривается как изображение, рельеф и след мастерской одновременно.</p>
+          <p className="hero-lede">Фото. Графит. Свет. Пять фрагментов стены.</p>
           <a className="scroll-cue" href="#works"><span>Смотреть архив</span><ArrowDown size={14} /></a>
         </div>
-        <div className="hero-plate" aria-hidden="true"><span className="plate-shadow" /><span className="plate-line plate-line-one" /><span className="plate-line plate-line-two" /><span className="plate-caption">MATERIAL / MEMORY / HAND</span></div>
+        <div className="hero-plate" aria-hidden="true"><span className="plate-shadow" /><span className="plate-line plate-line-one" /><span className="plate-line plate-line-two" /><span className="plate-line plate-line-red" /><span className="plate-caption">MATERIAL / MEMORY / HAND</span></div>
         <div className="hero-coordinates">55°45′ N<br />37°37′ E</div>
       </section>
 
@@ -128,7 +129,7 @@ export default function Home() {
       </section>
 
       <section className="works-section" id="works">
-        <div className="section-intro"><div><p className="kicker">АРХИВ / ПАРНЫЙ ПРОСМОТР</p><h2>Из стены<br />в лист.</h2></div><p className="section-description">Каждая работа показана в двух состояниях: документальный кадр и созданный по нему графитовый этюд. Этюд является интерпретацией, а не историческим оригиналом.</p></div>
+        <div className="section-intro"><div><p className="kicker">АРХИВ / ПАРНЫЙ ПРОСМОТР</p><h2>Из стены<br />в лист.</h2></div><p className="section-description">Фото и карандашный этюд. Нажмите на изображение, чтобы увеличить.</p></div>
         <div className="work-nav" aria-label="Навигация по работам">
           {works.map((work) => <button key={work.id} className={work.id === active.id ? "is-active" : ""} onClick={() => setActiveId(work.id)}><span>{work.index}</span><b>{work.room}</b></button>)}
         </div>
@@ -137,10 +138,13 @@ export default function Home() {
           <div className="room-topline"><span>{active.sourceLabel}</span><span>ROOM {active.index} / {active.room.toUpperCase()}</span></div>
           <div className="work-grid">
             <div className="work-image-column">
-              <ReliefFrame className={`work-frame ${active.orientation}`}>
-                <img src={showSketch ? active.sketch : active.photo} alt={`${active.title} — ${showSketch ? "карандашный этюд" : "фотодокументация"}`} />
-                <span className="frame-shadow" />
-              </ReliefFrame>
+              <button className="zoom-stage" onClick={() => setZoomOpen(true)} aria-label="Увеличить изображение">
+                <ReliefFrame className={`work-frame ${active.orientation}`}>
+                  <img src={showSketch ? active.sketch : active.photo} alt={`${active.title} — ${showSketch ? "карандашный этюд" : "фотодокументация"}`} />
+                  <span className="frame-shadow" />
+                </ReliefFrame>
+                <span className="zoom-hint"><ZoomIn size={14} /> увеличить</span>
+              </button>
               <div className="pair-overview" aria-label="Пара источник и интерпретативный этюд"><button className={showSketch ? "pair-thumb" : "pair-thumb is-selected"} onClick={() => setShowSketch(false)}><img src={active.photo} alt="Документальная фотография" /><span>ИСТОЧНИК / ФОТО</span></button><button className={showSketch ? "pair-thumb is-selected" : "pair-thumb"} onClick={() => setShowSketch(true)}><img src={active.sketch} alt="Интерпретативный карандашный этюд" /><span>ЭТЮД / ГРАФИТ</span></button></div><div className="image-caption"><span>{showSketch ? "ЭТЮД — ИНТЕРПРЕТАЦИЯ" : "ФОТО — ДОКУМЕНТ"}</span><button onClick={() => setShowSketch((value) => !value)}><Layers3 size={13} /> {showSketch ? "На фото" : "На эскиз"}</button></div>
             </div>
             <div className="work-text-column">
@@ -157,9 +161,11 @@ export default function Home() {
         </article>
       </section>
 
-      <section className="relief-section"><div className="relief-copy"><p className="kicker">МАТЕРИАЛЬНАЯ ПАМЯТЬ</p><h2>Рельеф —<br />это тень,<br /><em>оставшаяся</em><br />на стене.</h2></div><div className="relief-block"><span className="relief-glyph" /><span className="relief-glyph small" /><p>В экспозиции нет нейтрального фона. Бумага, рама и падающий свет становятся частью чтения: они показывают не только то, что изображено, но и как поверхность удерживает изображение.</p></div></section>
+      <section className="relief-section"><div className="relief-copy"><p className="kicker">ПОСЛЕДНИЙ ЗАЛ</p><h2>Вода<br />помнит<br /><em>ветер.</em></h2></div><div className="mill-scene" aria-label="Сказочная водяная мельница"><div className="mill-horizon" /><div className="mill-hill" /><div className="mill-house"><span className="mill-roof" /><span className="mill-door" /><span className="mill-window" /></div><div className="mill-wheel"><span /><span /><span /><span /><span /><span /></div><div className="mill-water"><i /><i /><i /><i /></div><div className="mill-wind"><i /><i /><i /></div><span className="mill-caption">ВОДЯНАЯ МЕЛЬНИЦА / СКАЗКА</span></div></section>
 
       <footer className="archive-footer"><span>ARCHIVE OF SURFACE / 2026</span><span>BASED ON UPLOADED PHOTO DOCUMENTATION</span><span><a href="#top">UP</a> <ArrowUpRight size={13} /></span></footer>
+
+      {zoomOpen && <div className="zoom-overlay" role="dialog" aria-modal="true" aria-label="Увеличенное изображение" onClick={() => setZoomOpen(false)}><button className="zoom-close" onClick={() => setZoomOpen(false)} aria-label="Закрыть"><X size={18} /></button><img src={showSketch ? active.sketch : active.photo} alt={`${active.title} — увеличенный вид`} onClick={(event) => event.stopPropagation()} /><span>{active.index} / {showSketch ? "ЭТЮД" : "ФОТО"}</span></div>}
 
       {indexOpen && <aside className="index-drawer" aria-label="Каталог выставки"><div className="drawer-head"><span>INDEX / WORKS</span><button onClick={() => setIndexOpen(false)} aria-label="Закрыть каталог"><X size={17} /></button></div><p className="drawer-note">Выборка из 38-страничного PDF-архива. Названия залов являются кураторскими, если иное не указано в источнике.</p>{works.map((work) => <button key={work.id} className={work.id === active.id ? "drawer-item is-active" : "drawer-item"} onClick={() => { setActiveId(work.id); setIndexOpen(false); }}><span>{work.index}</span><div><b>{work.title}</b><small>{work.material}</small></div></button>)}</aside>}
     </main>
