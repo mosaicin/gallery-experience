@@ -85,6 +85,10 @@ const works: Work[] = [
   },
 ];
 
+const photoCatalog = [
+  ["01-process", "Лист 01 / процесс"], ["02-saint", "Лист 01 / фрагмент"], ["03-ensemble", "Лист 01 / ансамбль"], ["04-architecture", "Лист 01 / архитектура"], ["05-angel", "Лист 02 / диалог"], ["06-workshop", "Лист 02 / мастерская"], ["07-facade", "Лист 02 / фасад"], ["08-drapery", "Лист 02 / драпировка"], ["09-saint-icon", "Лист 03 / икона"], ["10-saint-close", "Лист 03 / лицо"], ["11-fronton", "Лист 04 / фронтон"],
+] as const;
+
 function ReliefFrame({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`relief-frame ${className}`}><div className="relief-inner">{children}</div></div>;
 }
@@ -94,6 +98,7 @@ export default function Home() {
   const [showSketch, setShowSketch] = useState(true);
   const [indexOpen, setIndexOpen] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [catalogImage, setCatalogImage] = useState<string | null>(null);
   const active = useMemo(() => works.find((work) => work.id === activeId) ?? works[0], [activeId]);
   const activeIndex = works.findIndex((work) => work.id === active.id);
   const next = works[(activeIndex + 1) % works.length];
@@ -163,9 +168,11 @@ export default function Home() {
 
       <section className="relief-section"><div className="relief-copy"><p className="kicker">ПОСЛЕДНИЙ ЗАЛ</p><h2>Вода<br />помнит<br /><em>ветер.</em></h2></div><div className="mill-scene" aria-label="Сказочная водяная мельница"><div className="mill-horizon" /><div className="mill-hill" /><div className="mill-house"><span className="mill-roof" /><span className="mill-door" /><span className="mill-window" /></div><div className="mill-wheel"><span /><span /><span /><span /><span /><span /></div><div className="mill-water"><i /><i /><i /><i /></div><div className="mill-wind"><i /><i /><i /></div><span className="mill-caption">ВОДЯНАЯ МЕЛЬНИЦА / СКАЗКА</span></div></section>
 
+      <section className="photo-catalog" id="catalog"><div className="catalog-heading"><p className="kicker">ПОЛНЫЙ ФОТОКАТАЛОГ</p><span>11 / 11</span></div><div className="catalog-grid">{photoCatalog.map(([id, label], index) => <button className="catalog-item" key={id} onClick={() => setCatalogImage(`/photo-catalog/${id}.webp`)} aria-label={`Увеличить ${label}`}><img src={`/photo-catalog/${id}.webp`} alt={label} loading={index > 3 ? "lazy" : "eager"} /><span>{String(index + 1).padStart(2, "0")} — {label}</span></button>)}</div></section>
+
       <footer className="archive-footer"><span>ARCHIVE OF SURFACE / 2026</span><span>BASED ON UPLOADED PHOTO DOCUMENTATION</span><span><a href="#top">UP</a> <ArrowUpRight size={13} /></span></footer>
 
-      {zoomOpen && <div className="zoom-overlay" role="dialog" aria-modal="true" aria-label="Увеличенное изображение" onClick={() => setZoomOpen(false)}><button className="zoom-close" onClick={() => setZoomOpen(false)} aria-label="Закрыть"><X size={18} /></button><img src={showSketch ? active.sketch : active.photo} alt={`${active.title} — увеличенный вид`} onClick={(event) => event.stopPropagation()} /><span>{active.index} / {showSketch ? "ЭТЮД" : "ФОТО"}</span></div>}
+      {(zoomOpen || catalogImage) && <div className="zoom-overlay" role="dialog" aria-modal="true" aria-label="Увеличенное изображение" onClick={() => { setZoomOpen(false); setCatalogImage(null); }}><button className="zoom-close" onClick={() => { setZoomOpen(false); setCatalogImage(null); }} aria-label="Закрыть"><X size={18} /></button><img src={catalogImage ?? (showSketch ? active.sketch : active.photo)} alt={catalogImage ? "Увеличенная фотография из каталога" : `${active.title} — увеличенный вид`} onClick={(event) => event.stopPropagation()} /><span>{catalogImage ? "ФОТОКАТАЛОГ" : `${active.index} / ${showSketch ? "ЭТЮД" : "ФОТО"}`}</span></div>}
 
       {indexOpen && <aside className="index-drawer" aria-label="Каталог выставки"><div className="drawer-head"><span>INDEX / WORKS</span><button onClick={() => setIndexOpen(false)} aria-label="Закрыть каталог"><X size={17} /></button></div><p className="drawer-note">Выборка из 38-страничного PDF-архива. Названия залов являются кураторскими, если иное не указано в источнике.</p>{works.map((work) => <button key={work.id} className={work.id === active.id ? "drawer-item is-active" : "drawer-item"} onClick={() => { setActiveId(work.id); setIndexOpen(false); }}><span>{work.index}</span><div><b>{work.title}</b><small>{work.material}</small></div></button>)}</aside>}
     </main>
