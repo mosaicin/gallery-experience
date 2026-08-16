@@ -6,10 +6,13 @@ The visual language is intentionally sparse: bone paper, soot, graphite, mineral
 
 ## Published links
 
-- **Website on Manus:** https://galleryexp-dstrjv7l.manus.space
-- **Open GitHub repository:** https://github.com/mosaicin/gallery-experience
+| Назначение | Ссылка | Статус |
+|---|---|---|
+| **Постоянный сайт Manus** | https://galleryexp-dstrjv7l.manus.space | Публичная опубликованная версия |
+| **Открытый GitHub-репозиторий** | https://github.com/mosaicin/gallery-experience | Исходный код и фотокаталог |
+| **Ubuntu preview** | https://3000-ixa2dmomf7pu7fx70a-a586e3b1.us2.manus.computer | Временный адрес запущенного dev-сервера |
 
-The website is the current public exhibition. The repository contains the source code, optimized catalogue images, and build instructions.
+Сайт Manus является постоянной публичной версией. GitHub содержит исходный код, оптимизированный фотокаталог и инструкции запуска. Ubuntu preview предназначен для текущей проверки и может измениться после остановки или перезапуска локального сервера.
 
 ## Public scope
 
