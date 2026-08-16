@@ -1,56 +1,39 @@
+# Archive of Surface — online exhibition
 
+`Archive of Surface` is a restrained online exhibition built from a supplied photographic archive of mosaic and monumental work. The interface presents each selected fragment in two states: a documentary source photograph and an interpretive graphite study created for this exhibition route.
 
-## Подробная схема кубической комнаты
+The visual language is intentionally sparse: bone paper, soot, graphite, mineral gold, oxidized-blue wayfinding, bas-relief frames, and directional shadows. Each room includes a short spatial prehistory. These texts are marked as curatorial interpretation and do not assert unverified titles, dates, authorship, or locations.
 
-Текущая версия Darkland — это не плоская сцена, а сетка комнат с шестью направлениями перехода. Координата `ROOM x,y,z` меняется после принятого перехода.
+## Public scope
 
-```text
-                         ВЕРХ / CEILING
-                       [дверь +Y]
-                            ▲
-                            │ Space / PageUp
-                            │
-ЗАПАД / WEST  ◄── [ ROOM x,y,z ] ──►  ВОСТОК / EAST
-  ArrowLeft                         ArrowRight
-                            │
-                            │ Shift / PageDown
-                            ▼
-                          НИЗ / FLOOR
-                       [дверь -Y]
+This public repository contains the web interface and the exhibition assets used by the deployed page. It does **not** contain the uploaded PDF, private personal archives, Mail.ru credentials, media archives, or private legal notes. The source images are referenced through project storage paths rather than committed as local bulk files.
 
-          СЕВЕР / NORTH: ArrowUp       ЮГ / SOUTH: ArrowDown
+## Run locally
+
+```bash
+pnpm install
+pnpm run dev
 ```
 
-| Направление | Грань комнаты | Координата | Управление | Результат |
-|---|---|---:|---|---|
-| Вперёд | Север | `z + 1` | `ArrowUp` | Переход через северную дверь |
-| Назад | Юг | `z - 1` | `ArrowDown` | Переход через южную дверь |
-| Влево | Запад | `x - 1` | `ArrowLeft` | Переход через западную дверь |
-| Вправо | Восток | `x + 1` | `ArrowRight` | Переход через восточную дверь |
-| Вверх | Потолок | `y + 1` | `Space` или `PageUp` | Открытие потолочной двери |
-| Вниз | Пол | `y - 1` | `Shift` или `PageDown` | Открытие двери в полу |
+For a production check:
 
-Каждый принятый переход блокирует повторный ввод на `420 ms`, воспроизводит переходный звук, меняет координату комнаты, перестраивает часть модульной геометрии и ориентирует камеру по входной грани. На телефоне экранные стрелки выполняют те же команды, а drag по игровому canvas вращает камеру по горизонтали и вертикали.
+```bash
+pnpm run check
+pnpm run build
+```
 
-## Что было добавлено в последней итерации
+## Structure
 
-Добавлены двустворчатые двери в полу и потолке с отдельными рамами и подсветкой. Добавлена подробная схема движения и обозначения верхней/нижней граней. Визуальные модули меняют положение и поворот при смене координаты комнаты, чтобы переход был заметен не только в тексте HUD. Кодовая база не зависит от генерации изображений: это обычная Babylon.js/TypeScript-механика.
+The exhibition page lives in `client/src/pages/Home.tsx`. Visual tokens and the material system are defined in `client/src/index.css`. The project uses React, Vite, Tailwind CSS, and Lucide icons.
 
+## Attribution and interpretation
 
-## ShadowCube-inspired mechanics and autonomous checks
+The photograph labels identify the material visible in the supplied archive. Room names, spatial prehistories, and graphite studies are curatorial treatments for this online exhibition. They should not be read as independent documentary claims.
 
-The project borrows only a general design idea from the referenced ShadowCube repository: a connected network of cube-like rooms, face-to-face transitions, spatial disorientation, and a route toward an exit. The implementation here is original Babylon.js/TypeScript code; no ShadowCube source code, Unity assets, film images, logo, or characters are copied. The reference has no explicit permissive code licence in its top-level files, so it is treated as inspiration only.
+## GitHub Pages
 
-Two GitHub Actions workflows now run automatically:
+The repository includes the existing GitHub Actions workflow for building the site. To enable the free GitHub Pages host, open **Settings → Pages → Build and deployment**, choose **GitHub Actions** as the source, save, and rerun the publish workflow. The resulting URL will use the repository's GitHub Pages address.
 
-| Workflow | Trigger | Checks or action |
-|---|---|---|
-| `Verify Darkland` | Push or pull request to `main` | Installs the locked dependencies, runs `pnpm run check`, and runs the production build. |
-| `Publish Darkland` | Push to `main` or manual dispatch | Builds the static site, creates the SPA fallback, uploads the Pages artifact, and deploys it through GitHub Pages. |
+## License
 
-To operate the project without repeatedly typing in chat, push a change to `main`, then open the **Actions** tab. A green `Verify Darkland` run means the TypeScript and production build checks passed. The `Publish Darkland` run then updates the GitHub Pages deployment. The managed live preview remains available separately while developing.
-
-
-### One-time GitHub Pages setup
-
-The verification workflow is fully automatic and has passed on commit `9aaa04a`. The Pages build artifact is also created automatically, but the repository currently returns `404/403` because GitHub Pages has not been enabled for this repository and the available token cannot change that account setting. To finish the public Pages URL once, open **Settings → Pages → Build and deployment → Source: GitHub Actions**, save, and rerun `Publish Darkland` from the Actions tab. After that, every push to `main` will rebuild and publish the game without further chat commands.
+The code is published for demonstration and exhibition purposes. Uploaded source photographs and generated study images remain subject to the rights and permissions of their respective owners and contributors; do not reuse them commercially without permission.
